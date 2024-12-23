@@ -24,8 +24,10 @@ log_max = -3
 lhs_samples[:, 1:4] = 10 ** (
     log_min + (log_max - log_min) * lhs_samples[:, 1:4]
 )
-lhs_samples[:, 4] = 2 * (
-    10 ** (log_min + (log_max - log_min) * lhs_samples[:, 4]) - 10 ** log_min
+log_min = -5
+log_max = -2.5
+lhs_samples[:, 4] = 10 ** (
+    log_min + (log_max - log_min) * lhs_samples[:, 4]
 )
 
 # parameter_filename = "parameters.csv"
@@ -35,7 +37,7 @@ lhs_samples[:, 4] = 2 * (
 
 # save individual chunks for processing
 num_thread = 800
-parameter_folder = "parameters_20241105_2"
+parameter_folder = "parameters_20241223"
 for i, chunk in enumerate(np.vsplit(lhs_samples, num_thread)):
     with open("{}/{}.csv".format(parameter_folder, i), "w") as f_p:
         csv_writer = csv.writer(f_p)
