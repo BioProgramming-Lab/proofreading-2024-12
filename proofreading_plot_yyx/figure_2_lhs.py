@@ -1,3 +1,4 @@
+from contextlib import ExitStack
 import numpy as np
 from rd_solver import *
 import os
@@ -83,10 +84,17 @@ if task_id is None:
     raise Exception(
         "Unable to find environment variable SLURM_ARRAY_TASK_ID"
     )
-parameter_folder = "parameters_20241105_2"
+parameter_folder = "parameters_20241223"
 parameters = np.genfromtxt(
     "{}/{}.csv".format(parameter_folder, int(task_id) - 1), delimiter=","
 )
+output_folder = "result_20241223"
+if not os.path.exists(output_folder):
+    os.makedirs(output_folder)
+    print("The new directory is created!")
+
+# setup betas
+betas = [0.5, 1, 2]
 
 for parameter in parameters:
     # randomize parameters
@@ -96,81 +104,90 @@ for parameter in parameters:
     koff_AR0 = parameter[3]
     gamma0 = parameter[4]
 
-    # * run simulation
-    with_positive_feedbacks = [True, False]
-    for with_positive_feedback in with_positive_feedbacks:
-        diff_coeffs.D_A = D_0
-        diff_coeffs.D_B = D_0
-        diff_coeffs.D_C = D_0
-        diff_coeffs.D_complex = D_0
+    # use a dictionary to save all filenames and result
+    result_dict = {
+        "parameters.csv": parameter,
+    }
 
-        # Initialize
-        j_A = np.zeros(n_gridpoints)
-        j_A[0:sender_region] = j_A0
-        j_B = np.zeros(n_gridpoints)
-        j_B[0:sender_region] = j_A0
-        j_C = np.zeros(n_gridpoints)
-        j_C[0:sender_region] = j_A0 * 2
-        j_R = np.zeros(n_gridpoints)
-        j_R = j_R0
+    # run with different beta (receiver region j_A0 factor)
+    for beta in betas:
+        # * run simulation
+        with_positive_feedbacks = [True, False]
+        for with_positive_feedback in with_positive_feedbacks:
+            diff_coeffs.D_A = D_0
+            diff_coeffs.D_B = D_0
+            diff_coeffs.D_C = D_0
+            diff_coeffs.D_complex = D_0
 
-        j_a = np.zeros(n_gridpoints)
-        j_a[sender_region:] = j_A0 * 0
-        j_b = np.zeros(n_gridpoints)
-        j_b[sender_region:] = j_A0 * 0
+            # Initialize
+            j_A = np.zeros(n_gridpoints)
+            j_A[0:sender_region] = j_A0
+            j_B = np.zeros(n_gridpoints)
+            j_B[0:sender_region] = j_A0
+            j_C = np.zeros(n_gridpoints)
+            j_C[0:sender_region] = j_A0 * 2
+            j_R = np.zeros(n_gridpoints)
+            j_R = j_R0
 
-        if with_positive_feedback:
-            j_ac = np.zeros(n_gridpoints)
+            j_a = np.zeros(n_gridpoints)
+            j_a[sender_region:] = j_A0 * 0
+            j_b = np.zeros(n_gridpoints)
+            j_b[sender_region:] = j_A0 * 0
 
-            j_ac[sender_region:] = j_A0
-            j_bc = np.zeros(n_gridpoints)
-            j_bc[sender_region:] = j_A0
+            if with_positive_feedback:
+                j_ac = np.zeros(n_gridpoints)
 
-            production_rate = (j_A, j_B, j_C, j_a, j_b, j_ac, j_bc, j_R)
-            rxn_params = RXN_params_yuanqi(
-                r_AR=koff_AR0, r_BR=koff_AR0, gamma=gamma0
-            )
+                j_ac[sender_region:] = j_A0 * beta
+                j_bc = np.zeros(n_gridpoints)
+                j_bc[sender_region:] = j_A0 * beta
 
-            sol_with_feedback = np.array(RD_solve(
-                c_0_tuple, t, L=L, derivs_0=0, derivs_L=0,
-                diff_coeff_fun=Diff_fun, diff_coeff_params=(diff_coeffs,),
-                rxn_fun=RD_rxn, rxn_params=(rxn_params, production_rate),
-                rtol=1.49012e-8, atol=1.49012e-8
-            ))[:, -1, :]
+                production_rate = (j_A, j_B, j_C, j_a, j_b, j_ac, j_bc, j_R)
+                rxn_params = RXN_params_yuanqi(
+                    r_AR=koff_AR0, r_BR=koff_AR0, gamma=gamma0
+                )
 
-        else:
-            j_ac = np.zeros(n_gridpoints)
-            j_ac[sender_region:] = j_A0 * 0
-            j_bc = np.zeros(n_gridpoints)
-            j_bc[sender_region:] = j_A0 * 0
+                result_dict["with_feedback_{}.csv".format(beta)] = np.array(RD_solve(
+                    c_0_tuple, t, L=L, derivs_0=0, derivs_L=0,
+                    diff_coeff_fun=Diff_fun, diff_coeff_params=(diff_coeffs,),
+                    rxn_fun=RD_rxn, rxn_params=(rxn_params, production_rate),
+                    rtol=1.49012e-8, atol=1.49012e-8
+                ))[:, -1, :]
 
-            production_rate = (j_A, j_B, j_C, j_a, j_b, j_ac, j_bc, j_R)
-            rxn_params = RXN_params_yuanqi(
-                r_AR=koff_AR0, r_BR=koff_AR0, gamma=gamma0
-            )
+            else:
+                j_ac = np.zeros(n_gridpoints)
+                j_ac[sender_region:] = j_A0 * 0
+                j_bc = np.zeros(n_gridpoints)
+                j_bc[sender_region:] = j_A0 * 0
 
-            sol_without_feedback = np.array(RD_solve(
-                c_0_tuple, t, L=L, derivs_0=0, derivs_L=0,
-                diff_coeff_fun=Diff_fun, diff_coeff_params=(diff_coeffs,),
-                rxn_fun=RD_rxn, rxn_params=(rxn_params, production_rate),
-                rtol=1.49012e-8, atol=1.49012e-8
-            ))[:, -1, :]
+                production_rate = (j_A, j_B, j_C, j_a, j_b, j_ac, j_bc, j_R)
+                rxn_params = RXN_params_yuanqi(
+                    r_AR=koff_AR0, r_BR=koff_AR0, gamma=gamma0
+                )
 
-    # use fcntl save all data into one file
-    parameter_filename = "parameters.csv"
-    sol_filename = ("with_feedback.csv", "without_feedback.csv")
-    with open(parameter_filename, "a") as f_p, open(sol_filename[0], "a") as f_w, open(sol_filename[1], "a") as f_wo:
-        fcntl.flock(f_p, fcntl.LOCK_EX)
-        fcntl.flock(f_w, fcntl.LOCK_EX)
-        fcntl.flock(f_wo, fcntl.LOCK_EX)
+                result_dict["without_feedback_{}.csv".format(beta)] = np.array(RD_solve(
+                    c_0_tuple, t, L=L, derivs_0=0, derivs_L=0,
+                    diff_coeff_fun=Diff_fun, diff_coeff_params=(diff_coeffs,),
+                    rxn_fun=RD_rxn, rxn_params=(rxn_params, production_rate),
+                    rtol=1.49012e-8, atol=1.49012e-8
+                ))[:, -1, :]
 
-        csv_writer = csv.writer(f_p)
-        csv_writer.writerow(parameter)
-        csv_writer = csv.writer(f_w)
-        csv_writer.writerows(sol_with_feedback)
-        csv_writer = csv.writer(f_wo)
-        csv_writer.writerows(sol_without_feedback)
+    # use fcntl save all data at same time
+    with ExitStack() as stack:
+        files = [
+            stack.enter_context(
+                open(os.path.join(output_folder, fname), "a")
+            ) for fname in result_dict
+        ]
 
-        fcntl.flock(f_p, fcntl.LOCK_UN)
-        fcntl.flock(f_w, fcntl.LOCK_UN)
-        fcntl.flock(f_wo, fcntl.LOCK_UN)
+        for f in files:
+            fcntl.flock(f, fcntl.LOCK_EX)
+
+        for f, k in zip(files, result_dict):
+            csv_writer = csv.writer(f)
+            if k == "parameters.csv":
+                csv_writer.writerow(result_dict[k])
+            else:
+                csv_writer.writerows(result_dict[k])
+
+        for f in files:
+            fcntl.flock(f, fcntl.LOCK_UN)
