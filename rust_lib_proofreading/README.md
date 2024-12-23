@@ -3,10 +3,10 @@
 ## Requirement
 - **pyenv-virtualenv**, if you use conda/mamba, you **DONOT** need to manually install this.
 - **maturin**, to build PyO3 project
-- **rustup**, **cargo**, for rust compile
+- **rustup**, **cargo**, for rust compiling
 
 ## Installation
-please allow the official [PyO3 guide](https://pyo3.rs/v0.23.3/index.html) if customization is needed.
+please follow the official [PyO3 guide](https://pyo3.rs/v0.23.3/index.html) if customization is needed.
 ```shell
 conda activate your_env
 maturin develop
