@@ -94,7 +94,7 @@ if not os.path.exists(output_folder):
     print("The new directory is created!")
 
 # setup betas
-betas = [0.5, 1, 2]
+betas = [0, 0.5, 1, 2]
 
 for parameter in parameters:
     # randomize parameters
@@ -112,64 +112,43 @@ for parameter in parameters:
     # run with different beta (receiver region j_A0 factor)
     for beta in betas:
         # * run simulation
-        with_positive_feedbacks = [True, False]
-        for with_positive_feedback in with_positive_feedbacks:
-            diff_coeffs.D_A = D_0
-            diff_coeffs.D_B = D_0
-            diff_coeffs.D_C = D_0
-            diff_coeffs.D_complex = D_0
+        diff_coeffs.D_A = D_0
+        diff_coeffs.D_B = D_0
+        diff_coeffs.D_C = D_0
+        diff_coeffs.D_complex = D_0
 
-            # Initialize
-            j_A = np.zeros(n_gridpoints)
-            j_A[0:sender_region] = j_A0
-            j_B = np.zeros(n_gridpoints)
-            j_B[0:sender_region] = j_A0
-            j_C = np.zeros(n_gridpoints)
-            j_C[0:sender_region] = j_A0 * 2
-            j_R = np.zeros(n_gridpoints)
-            j_R = j_R0
+        # Initialize
+        j_A = np.zeros(n_gridpoints)
+        j_A[0:sender_region] = j_A0
+        j_B = np.zeros(n_gridpoints)
+        j_B[0:sender_region] = j_A0
+        j_C = np.zeros(n_gridpoints)
+        j_C[0:sender_region] = j_A0 * 2
+        j_R = np.zeros(n_gridpoints)
+        j_R = j_R0
 
-            j_a = np.zeros(n_gridpoints)
-            j_a[sender_region:] = j_A0 * 0
-            j_b = np.zeros(n_gridpoints)
-            j_b[sender_region:] = j_A0 * 0
+        j_a = np.zeros(n_gridpoints)
+        j_a[sender_region:] = j_A0 * 0
+        j_b = np.zeros(n_gridpoints)
+        j_b[sender_region:] = j_A0 * 0
 
-            if with_positive_feedback:
-                j_ac = np.zeros(n_gridpoints)
+        j_ac = np.zeros(n_gridpoints)
 
-                j_ac[sender_region:] = j_A0 * beta
-                j_bc = np.zeros(n_gridpoints)
-                j_bc[sender_region:] = j_A0 * beta
+        j_ac[sender_region:] = j_A0 * beta
+        j_bc = np.zeros(n_gridpoints)
+        j_bc[sender_region:] = j_A0 * beta
 
-                production_rate = (j_A, j_B, j_C, j_a, j_b, j_ac, j_bc, j_R)
-                rxn_params = RXN_params_yuanqi(
-                    r_AR=koff_AR0, r_BR=koff_AR0, gamma=gamma0
-                )
+        production_rate = (j_A, j_B, j_C, j_a, j_b, j_ac, j_bc, j_R)
+        rxn_params = RXN_params_yuanqi(
+            r_AR=koff_AR0, r_BR=koff_AR0, gamma=gamma0
+        )
 
-                result_dict["with_feedback_{}.csv".format(beta)] = np.array(RD_solve(
-                    c_0_tuple, t, L=L, derivs_0=0, derivs_L=0,
-                    diff_coeff_fun=Diff_fun, diff_coeff_params=(diff_coeffs,),
-                    rxn_fun=RD_rxn, rxn_params=(rxn_params, production_rate),
-                    rtol=1.49012e-8, atol=1.49012e-8
-                ))[:, -1, :]
-
-            else:
-                j_ac = np.zeros(n_gridpoints)
-                j_ac[sender_region:] = j_A0 * 0
-                j_bc = np.zeros(n_gridpoints)
-                j_bc[sender_region:] = j_A0 * 0
-
-                production_rate = (j_A, j_B, j_C, j_a, j_b, j_ac, j_bc, j_R)
-                rxn_params = RXN_params_yuanqi(
-                    r_AR=koff_AR0, r_BR=koff_AR0, gamma=gamma0
-                )
-
-                result_dict["without_feedback_{}.csv".format(beta)] = np.array(RD_solve(
-                    c_0_tuple, t, L=L, derivs_0=0, derivs_L=0,
-                    diff_coeff_fun=Diff_fun, diff_coeff_params=(diff_coeffs,),
-                    rxn_fun=RD_rxn, rxn_params=(rxn_params, production_rate),
-                    rtol=1.49012e-8, atol=1.49012e-8
-                ))[:, -1, :]
+        result_dict["result_{}.csv".format(beta)] = np.array(RD_solve(
+            c_0_tuple, t, L=L, derivs_0=0, derivs_L=0,
+            diff_coeff_fun=Diff_fun, diff_coeff_params=(diff_coeffs,),
+            rxn_fun=RD_rxn, rxn_params=(rxn_params, production_rate),
+            rtol=1.49012e-8, atol=1.49012e-8
+        ))[:, -1, :]
 
     # use fcntl save all data at same time
     with ExitStack() as stack:

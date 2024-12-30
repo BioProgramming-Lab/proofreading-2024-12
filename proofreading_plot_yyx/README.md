@@ -14,3 +14,21 @@
 ```
 - **figure_2_plot.ipynb**: analyzing simulation result and ploting.
 - **rd_solver.py**: adapted from Zhuo & Yuanqi
+
+## Licensing and Attribution
+
+The **sankey_mod.py** file is modified from project [**mpl_sankey**](https://github.com/toobaz/mpl_sankey), originally licensed under the LGPL-3.0. The modified file is also released under the LGPL-3.0.
+
+### Original File
+
+- **File:** __init__.py
+- **Author:** Pietro Battiston <me@pietrobattiston.it>
+- **License:** LGPL-3.0
+
+### Modified File
+
+- **File:** sankey_mod.py
+- **Modifier:** Yuxuan Yan <yanyuxuan@westlake.edu.cn>
+- **Date:** 2024/12/27
+- **Modifications:** add options to modify the order of nodes
+- **License:** LGPL-3.0
