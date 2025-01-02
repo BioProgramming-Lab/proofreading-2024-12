@@ -25,11 +25,12 @@ from matplotlib.collections import PatchCollection
 __version__ = '0.1.0'
 
 # Share of total width left empty (same in each phase):
-GAPS = .1
+GAPS = 0
 
 # Location of bounds (if a phase is drawn from 0 to 1).
-LEFT = .1
-RIGHT = .9
+LEFT = .3
+RIGHT = .7
+ALPHA = 0.8
 
 
 def _draw_flow(start, end, width, left, right, color):
@@ -61,7 +62,7 @@ def _draw_flow(start, end, width, left, right, color):
 
     path = Path(verts, codes)
 
-    patch = patches.PathPatch(path, facecolor=color, lw=0, alpha=.4)
+    patch = patches.PathPatch(path, facecolor=color, lw=0, alpha=ALPHA - 0.2)
     plt.gca().add_patch(patch)
 
 
@@ -75,7 +76,18 @@ def _node_text(start, size, node_sizes):
     return node_sizes.format(label=start, size=size)
 
 
-def sankey(data, cmap=plt.get_cmap('jet_r'), flows_color=None,
+DEFAULT_COLOR = [
+    "#F8766D",
+    "#CD9600",
+    "#7CAE00",
+    "#00BE67",
+    "#00BFC4",
+    "#00A9FF",
+    "#C77CFF",
+    "#FF61CC"
+]
+
+def sankey(data, nodes_color=DEFAULT_COLOR, flows_color=None,
            labels_color='black', titles_color='black', labels_size=20,
            titles_size=20, node_sizes=False, sort_flows_by_nodes=False):
     """
@@ -92,9 +104,7 @@ def sankey(data, cmap=plt.get_cmap('jet_r'), flows_color=None,
         At least two stages (start, end) are needed to produce a meaningful
         diagram, hence "data" needs to hold three or more columns.
 
-    cmap : colormap, default: 'jet_r'
-        Used to assign a color to each block (and to its outgoing flows, unless
-        the "flows_color" argument is used).
+    nodes_color : array of colors
 
     flows_color : color, default: None
         Draw all flows of a same color, rather than of the color of each flow's
@@ -133,8 +143,7 @@ def sankey(data, cmap=plt.get_cmap('jet_r'), flows_color=None,
 
     all_labels = data.iloc[:, 1:].stack().unique()
 
-    colors = dict(zip(all_labels,
-                      cmap(np.arange(0, len(all_labels)) / len(all_labels))))
+    colors = dict(zip(all_labels, nodes_color))
 
     # Actual scale from flow/block width to drawn width:
     factor = (1 - GAPS) / data.iloc[:, 0].sum()
@@ -187,7 +196,7 @@ def sankey(data, cmap=plt.get_cmap('jet_r'), flows_color=None,
                 p = patches.Rectangle((l, 1 - bottom - shares.loc[start]),
                                       w, shares.loc[start],
                                       fill=False, clip_on=False)
-                pc = PatchCollection([p], facecolor=colors[start], alpha=.5)
+                pc = PatchCollection([p], facecolor=colors[start], alpha=ALPHA)
                 plt.gca().add_collection(pc)
 
                 # Draw labels text:
@@ -201,12 +210,12 @@ def sankey(data, cmap=plt.get_cmap('jet_r'), flows_color=None,
                     else:
                         text = f"{start}"
 
-                    plt.gca().text(text_x,
-                                   1 - bottom - 0.5 * shares.loc[start],
-                                   text,
-                                   horizontalalignment='center',
-                                   verticalalignment='center',
-                                   fontsize=labels_size, color=labels_color)
+                    # plt.gca().text(text_x,
+                    #                1 - bottom - 0.5 * shares.loc[start],
+                    #                text,
+                    #                horizontalalignment='center',
+                    #                verticalalignment='center',
+                    #                fontsize=labels_size, color=labels_color)
 
             # Draw titles:
             if text_x != -1 and titles_color is not None:

@@ -30,5 +30,5 @@ The **sankey_mod.py** file is modified from project [**mpl_sankey**](https://git
 - **File:** sankey_mod.py
 - **Modifier:** Yuxuan Yan <yanyuxuan@westlake.edu.cn>
 - **Date:** 2024/12/27
-- **Modifications:** add options to modify the order of nodes
+- **Modifications:** modified display style
 - **License:** LGPL-3.0
