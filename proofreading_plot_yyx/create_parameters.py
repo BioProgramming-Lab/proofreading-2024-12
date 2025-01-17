@@ -3,10 +3,10 @@ import csv
 import numpy as np
 
 # define the number of samples and dimensions
-# num_samples = 40000
-num_samples = 800
+num_samples = 40000
+# num_samples = 800
 num_thread = 800
-num_dimensions = 5
+num_dimensions = 3
 
 # create sampler and sample parameters
 sampler = qmc.LatinHypercube(d=num_dimensions)
@@ -19,17 +19,12 @@ lhs_samples = sampler.random(n=num_samples)
 # koff_AR0 = 10 ** np.random.uniform(-5, -3)
 # gamma0 = 2 * 10 ** np.random.uniform(-20, -3)
 
-lhs_samples[:, 0] = lhs_samples[:, 0] * 50
+lhs_samples[:, 0] = lhs_samples[:, 0] * 10
 
-log_min = -5
-log_max = -3
-lhs_samples[:, 1:4] = 10 ** (
+log_min = -1
+log_max = 1
+lhs_samples[:, 1:3] = 10 ** (
     log_min + (log_max - log_min) * lhs_samples[:, 1:4]
-)
-log_min = -5
-log_max = -2.5
-lhs_samples[:, 4] = 10 ** (
-    log_min + (log_max - log_min) * lhs_samples[:, 4]
 )
 
 # parameter_filename = "parameters.csv"
@@ -39,7 +34,7 @@ lhs_samples[:, 4] = 10 ** (
 
 # save individual chunks for processing
 
-parameter_folder = "parameters_20250115_1000"
+parameter_folder = "parameters_20250117_intracellular"
 for i, chunk in enumerate(np.vsplit(lhs_samples, num_thread)):
     with open("{}/{}.csv".format(parameter_folder, i), "w") as f_p:
         csv_writer = csv.writer(f_p)

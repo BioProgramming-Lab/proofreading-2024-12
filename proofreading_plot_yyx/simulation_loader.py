@@ -65,7 +65,7 @@ def subset_decorator(func):
 
 
 class Simulations:
-    def __init__(self, path="./", betas=[""], n_species=8):
+    def __init__(self, path="./", betas=[""], n_species=7):
         # betas need to be a list
 
         # initial dicts
@@ -78,7 +78,6 @@ class Simulations:
             rust_lib_proofreading.read_parameters(path + "/parameters.csv")
         )
         self.n_sims = self.parameters[None].shape[0]
-        self.genrate_koff_gamma0()
         print("Parameters loaded.")
         print(self.get_parameters_shape())
 
@@ -108,14 +107,6 @@ class Simulations:
                     axis=-1
                 )
             )
-
-    def genrate_koff_gamma0(self):
-        self.parameters[None] = np.append(
-            self.get_parameters(),
-            self.get_parameters()[:, [3]] +
-            self.get_parameters()[:, [4]],
-            axis=-1
-        )
 
     def get_parameters_shape(self):
         shapes = {}
@@ -152,7 +143,7 @@ class Simulations:
 
     @subset_decorator
     def get_AC(self, beta=0, subsets=None, not_subsets=None):
-        return self.get_solve(beta)[:, 4]
+        return self.get_solve(beta)[:, 5]
 
     @subset_decorator
     def get_AC_log(self, beta=0, subsets=None, not_subsets=None):
@@ -162,7 +153,7 @@ class Simulations:
     def get_fidelity(self, beta=0, subsets=None, not_subsets=None):
         # enhanced fidelity
         return self.get_AC(beta) / \
-            self.get_solve(beta)[:, 5] / \
+            self.get_solve(beta)[:, 6] / \
             RXN_params_yuanqi().ratio
 
     @subset_decorator
