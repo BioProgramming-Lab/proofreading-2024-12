@@ -4,6 +4,7 @@ from rd_solver import *
 import os
 import fcntl
 import csv
+from itertools import product
 
 
 class RXN_params_yuanqi(object):
@@ -71,12 +72,6 @@ L = grid_spacing * (n_gridpoints - 1)  # um
 
 
 diff_coeffs = DIFFUSION()
-c_0_tuple = (
-    np.zeros(n_gridpoints), np.zeros(n_gridpoints),
-    np.zeros(n_gridpoints), np.zeros(n_gridpoints),
-    np.zeros(n_gridpoints), np.zeros(n_gridpoints),
-    np.zeros(n_gridpoints), np.zeros(n_gridpoints),
-)
 
 # read pre-generated parameters
 task_id = os.getenv("SLURM_ARRAY_TASK_ID")
@@ -84,19 +79,159 @@ if task_id is None:
     raise Exception(
         "Unable to find environment variable SLURM_ARRAY_TASK_ID"
     )
-parameter_folder = "parameters_20241223"
+parameter_folder = "parameters_20250115_1000"
 parameters = np.genfromtxt(
     "{}/{}.csv".format(parameter_folder, int(task_id) - 1), delimiter=","
 )
-output_folder = "result_20241223"
+output_folder = "result_20250116"
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
     print("The new directory is created!")
 
-# setup betas
-betas = [0, 0.5, 1, 2]
 
-for parameter in parameters:
+
+DEFAULT_META_PARAMETERS = {
+    # beta for activator, repressor co-affect one same output
+    # k and n is extracted from the standalone version
+    "b_ac_rp": 0,
+    # beta for activator affect one individual output
+    "b_ac": 0,
+    "k_ac": 1,
+    "n_ac": 1,
+    # beta for repressor affect one individual output
+    "b_rp": 0,
+    "n_rp": 1,
+    "k_rp": 1,
+    "sender_region": 200,
+    "receiver_region": 251,
+    "sender_ratio": 1,
+    "n_gridpoints": 451,
+    "receptor_preequilibium": 0
+}
+
+class MetaParameter(dict):
+    def __init__(self, **kwargs):
+        super().__init__(DEFAULT_META_PARAMETERS)
+        self.update(kwargs)
+    def as_string(self):
+        keys = []
+        for k in self:
+            if self[k] != DEFAULT_META_PARAMETERS[k]:
+                keys.append(k)
+        if len(keys) == 0:
+            return "baseline"
+        else:
+            return "_".join(map(lambda x: x + str(self[x]), keys))
+
+        
+
+# setup hill function parameters
+# (beta, k, n)
+meta_parameters = []
+
+# ------------ 20250115
+# meta_parameters += [
+#     # just to take a note on the previously default parameter
+#     # DEFAULT_META_PARAMETERS = {
+#     #     "b": 0,
+#     #     "k": 1,
+#     #     "n": 1,
+#     #     "sender_region": 200,
+#     #     "receiver_region": 251,
+#     #     "sender_ratio": 1,
+#     #     "n_gridpoints": 451,
+#     #     "proofreading_basal": 0,
+#     #     "mutual_inhibition": 0,
+#     #     "receptor_preequilibium": 0
+#     # }
+
+
+#     # base line (no feedback)
+#     MetaParameter(),
+
+#     # hill function parameters
+#     MetaParameter(n=1, k=1, b=1),
+#     MetaParameter(n=3, k=1, b=1),
+#     MetaParameter(n=1, k=3, b=1),
+#     MetaParameter(n=1, k=6, b=1),
+#     MetaParameter(n=1, k=1, b=0.5),
+#     MetaParameter(n=1, k=1, b=2),
+
+#     # increase sender secretion rate
+#     MetaParameter(sender_ratio=3),
+
+#     # extend sender region to the right
+#     MetaParameter(sender_region=451),
+
+#     # extend sender region X3 to the left
+#     MetaParameter(sender_region=600, n_gridpoints=851),
+
+#     # [0, 0, 0],  # Case 1: no feedback
+#     # same as baseline 
+#     # [1, 0, 0], # Case 2:  basal secretion in proofreading region
+#     MetaParameter(proofreading_basal=1),
+#     # [0, 1, 0], # Case 3:  self-activation
+#     # same as n=1, k=1, b=1
+#     # [1, 0, 1], # Case 4:  mutual inhibition
+#     MetaParameter(proofreading_basal=1, mutual_inhibition=1),
+#     # [1, 1, 1] # Case 5:  self-activation + mutual inhibition
+#     MetaParameter(n=1, k=1, b=1, proofreading_basal=1, mutual_inhibition=1),
+#     # pre equilibrium receptor concentration
+#     MetaParameter(receptor_preequilibium=1),
+# ]
+
+
+# --------------- 20250116
+# just to take a note on the previously default parameter
+# DEFAULT_META_PARAMETERS = {
+#     "b_ac_rp": 0,
+#     "b_ac": 0,
+#     "k_ac": 1,
+#     "n_ac": 1,
+#     "b_rp": 0,
+#     "n_rp": 1,
+#     "k_rp": 1,
+#     "sender_region": 200,
+#     "receiver_region": 251,
+#     "sender_ratio": 1,
+#     "n_gridpoints": 451,
+#     "receptor_preequilibium": 0
+# }
+
+meta_parameters.append(MetaParameter())
+for b_ac, b_rp, k_ac, k_rp, n_ac, n_rp in product(
+    [0, 1, 2],
+    [0, 1, 2],
+    [1, 10, 100],
+    [1, 10, 100, 1000],
+    [1, 3],
+    [1, 3],
+):
+    if b_ac == 0 and b_rp == 0:
+        continue
+    meta_parameters.append(
+        MetaParameter(
+            b_ac=b_ac, b_rp=b_rp, k_ac=k_ac, k_rp=k_rp, n_ac=n_ac, n_rp=n_rp,
+        )
+    )
+for b_ac_rp, k_ac, k_rp, n_ac, n_rp in product(
+    [1, 2],
+    [1, 10, 100],
+    [1, 10, 100, 1000],
+    [1, 3],
+    [1, 3],
+):
+    meta_parameters.append(
+        MetaParameter(
+            b_ac_rp=b_ac_rp, k_ac=k_ac, k_rp=k_rp, n_ac=n_ac, n_rp=n_rp,
+        )
+    )
+
+
+print("run with hill function parameters: {}".format(meta_parameters))
+
+
+for parameter in parameters.reshape((-1, 5)):
     # randomize parameters
     D_0 = parameter[0]
     j_A0 = parameter[1]
@@ -110,40 +245,99 @@ for parameter in parameters:
     }
 
     # run with different beta (receiver region j_A0 factor)
-    for beta in betas:
+    for meta_parameter in meta_parameters:
+        c_0_tuple = (
+            # c_A
+            np.zeros(meta_parameter["n_gridpoints"]),
+            # c_B
+            np.zeros(meta_parameter["n_gridpoints"]),
+            # c_C
+            np.zeros(meta_parameter["n_gridpoints"]),
+            # c_R
+            np.full(
+                meta_parameter["n_gridpoints"],
+                # pre equilibrium if option is used
+                j_R0 / RXN_params_yuanqi().deg if meta_parameter["receptor_preequilibium"] else 0
+            ),
+            # c_AC
+            np.zeros(meta_parameter["n_gridpoints"]),
+            # c_BC
+            np.zeros(meta_parameter["n_gridpoints"]),
+            # c_AR
+            np.zeros(meta_parameter["n_gridpoints"]),
+            # c_BR
+            np.zeros(meta_parameter["n_gridpoints"]),
+        )
+
         # * run simulation
+        # diffusion rate of each molecule
         diff_coeffs.D_A = D_0
         diff_coeffs.D_B = D_0
         diff_coeffs.D_C = D_0
         diff_coeffs.D_complex = D_0
 
-        # Initialize
-        j_A = np.zeros(n_gridpoints)
-        j_A[0:sender_region] = j_A0
-        j_B = np.zeros(n_gridpoints)
-        j_B[0:sender_region] = j_A0
-        j_C = np.zeros(n_gridpoints)
-        j_C[0:sender_region] = j_A0 * 2
-        j_R = np.zeros(n_gridpoints)
-        j_R = j_R0
+        # j_A: sender_region secretion of free A
+        j_A = np.zeros(meta_parameter["n_gridpoints"])
+        j_A[0:meta_parameter["sender_region"]] = j_A0
+        # j_A[meta_parameter["n_gridpoints"] - meta_parameter["receiver_region"]:] = j_A0 * meta_parameter["proofreading_basal"]
+        # j_B: sender_region secretion of free B
+        j_B = np.zeros(meta_parameter["n_gridpoints"])
+        j_B[0:meta_parameter["sender_region"]] = j_A0
+        # j_B[meta_parameter["n_gridpoints"] - meta_parameter["receiver_region"]:] = j_A0 * meta_parameter["proofreading_basal"]
+        # j_C: sender_region secretion of free C
+        j_C = np.zeros(meta_parameter["n_gridpoints"])
+        j_C[0:meta_parameter["sender_region"]] = j_A0 * 2
+        # j_C[meta_parameter["n_gridpoints"] - meta_parameter["receiver_region"]:] = j_A0 * meta_parameter["proofreading_basal"] * 2
+        # j_R: the secretion rate of free receptor 
+        j_R = np.zeros(meta_parameter["n_gridpoints"])
+        j_R[meta_parameter["n_gridpoints"] - meta_parameter["receiver_region"]:] = j_R0
 
-        j_a = np.zeros(n_gridpoints)
-        j_a[sender_region:] = j_A0 * 0
-        j_b = np.zeros(n_gridpoints)
-        j_b[sender_region:] = j_A0 * 0
+        # self_activation production of free A
+        j_self_activation_ar_on_a = np.zeros(meta_parameter["n_gridpoints"])
+        j_self_activation_ar_on_a[meta_parameter["n_gridpoints"] - meta_parameter["receiver_region"]:] = j_A0 * 0
+        # self_activation production of free B
+        j_self_activation_br_on_b = np.zeros(meta_parameter["n_gridpoints"])
+        j_self_activation_br_on_b[meta_parameter["n_gridpoints"] - meta_parameter["receiver_region"]:] = j_A0 * 0
 
-        j_ac = np.zeros(n_gridpoints)
+        # self_activation production rate of A+C
+        j_self_activation_ac_on_ac = np.zeros(meta_parameter["n_gridpoints"])
+        j_self_activation_ac_on_ac[meta_parameter["n_gridpoints"] - meta_parameter["receiver_region"]:] = j_A0 * meta_parameter["b_ac"]
+        # self_activation production rate of B+C
+        j_self_activation_bc_on_bc = np.zeros(meta_parameter["n_gridpoints"])
+        j_self_activation_bc_on_bc[meta_parameter["n_gridpoints"] - meta_parameter["receiver_region"]:] = j_A0 * meta_parameter["b_ac"]
 
-        j_ac[sender_region:] = j_A0 * beta
-        j_bc = np.zeros(n_gridpoints)
-        j_bc[sender_region:] = j_A0 * beta
+        # mutual_inhibition AC on BC
+        j_mutual_inhibition_ac_on_bc = np.zeros(meta_parameter["n_gridpoints"])
+        j_mutual_inhibition_ac_on_bc[meta_parameter["n_gridpoints"] - meta_parameter["receiver_region"]:] = j_A0 * meta_parameter["b_rp"]
+        # mutual_inhibition BC on AC
+        j_mutual_inhibition_bc_on_ac = np.zeros(meta_parameter["n_gridpoints"])
+        j_mutual_inhibition_bc_on_ac[meta_parameter["n_gridpoints"] - meta_parameter["receiver_region"]:] = j_A0 * meta_parameter["b_rp"]
 
-        production_rate = (j_A, j_B, j_C, j_a, j_b, j_ac, j_bc, j_R)
+        # mutual_inhibition AC on BC
+        j_ac_rp = np.zeros(meta_parameter["n_gridpoints"])
+        j_ac_rp[meta_parameter["n_gridpoints"] - meta_parameter["receiver_region"]:] = j_A0 * meta_parameter["b_ac_rp"]
+        # mutual_inhibition BC on AC
+        j_ac_rp = np.zeros(meta_parameter["n_gridpoints"])
+        j_ac_rp[meta_parameter["n_gridpoints"] - meta_parameter["receiver_region"]:] = j_A0 * meta_parameter["b_ac_rp"]
+
+        
+        production_rate = (
+            j_A, j_B, j_C,
+            j_self_activation_ar_on_a, j_self_activation_br_on_b,
+            j_self_activation_ac_on_ac, j_self_activation_bc_on_bc,
+            j_mutual_inhibition_ac_on_bc, j_mutual_inhibition_bc_on_ac,
+            j_ac_rp,
+            j_R,
+        )
         rxn_params = RXN_params_yuanqi(
-            r_AR=koff_AR0, r_BR=koff_AR0, gamma=gamma0
+            r_AR=koff_AR0, r_BR=koff_AR0, gamma=gamma0,
+            n_ac=meta_parameter["n_ac"],
+            k_ac=meta_parameter["k_ac"],
+            n_rp=meta_parameter["n_rp"],
+            k_rp=meta_parameter["k_rp"],
         )
 
-        result_dict["result_{}.csv".format(beta)] = np.array(RD_solve(
+        result_dict["result_{}.csv".format(meta_parameter.as_string())] = np.array(RD_solve(
             c_0_tuple, t, L=L, derivs_0=0, derivs_L=0,
             diff_coeff_fun=Diff_fun, diff_coeff_params=(diff_coeffs,),
             rxn_fun=RD_rxn, rxn_params=(rxn_params, production_rate),
@@ -170,3 +364,4 @@ for parameter in parameters:
 
         for f in files:
             fcntl.flock(f, fcntl.LOCK_UN)
+

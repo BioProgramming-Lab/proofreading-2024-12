@@ -210,12 +210,12 @@ def sankey(data, nodes_color=DEFAULT_COLOR, flows_color=None,
                     else:
                         text = f"{start}"
 
-                    # plt.gca().text(text_x,
-                    #                1 - bottom - 0.5 * shares.loc[start],
-                    #                text,
-                    #                horizontalalignment='center',
-                    #                verticalalignment='center',
-                    #                fontsize=labels_size, color=labels_color)
+                    plt.gca().text(text_x,
+                                   1 - bottom - 0.5 * shares.loc[start],
+                                   text,
+                                   horizontalalignment='center',
+                                   verticalalignment='center',
+                                   fontsize=labels_size, color=labels_color)
 
             # Draw titles:
             if text_x != -1 and titles_color is not None:

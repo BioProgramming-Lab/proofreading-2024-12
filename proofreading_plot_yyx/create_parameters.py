@@ -3,7 +3,9 @@ import csv
 import numpy as np
 
 # define the number of samples and dimensions
-num_samples = 40000
+# num_samples = 40000
+num_samples = 800
+num_thread = 800
 num_dimensions = 5
 
 # create sampler and sample parameters
@@ -36,8 +38,8 @@ lhs_samples[:, 4] = 10 ** (
 #     csv_writer.writerows(lhs_samples)
 
 # save individual chunks for processing
-num_thread = 800
-parameter_folder = "parameters_20241223"
+
+parameter_folder = "parameters_20250115_1000"
 for i, chunk in enumerate(np.vsplit(lhs_samples, num_thread)):
     with open("{}/{}.csv".format(parameter_folder, i), "w") as f_p:
         csv_writer = csv.writer(f_p)
