@@ -65,13 +65,17 @@ def subset_decorator(func):
 
 
 class Simulations:
-    def __init__(self, path="./", betas=[""], n_species=7):
+    def __init__(self, path="./", betas=[""], n_species=7, corr_species=5, wrong_species=6):
         # betas need to be a list
 
         # initial dicts
         self.subsets = {}
         self.parameters = {}
         self.solve = {}
+
+        # setup species for correct and wrong
+        self.corr_species = corr_species
+        self.wrong_species = wrong_species
 
         # load parameters
         self.parameters[None] = np.array(
@@ -143,7 +147,7 @@ class Simulations:
 
     @subset_decorator
     def get_AC(self, beta=0, subsets=None, not_subsets=None):
-        return self.get_solve(beta)[:, 5]
+        return self.get_solve(beta)[:, self.corr_species]
 
     @subset_decorator
     def get_AC_log(self, beta=0, subsets=None, not_subsets=None):
@@ -153,7 +157,7 @@ class Simulations:
     def get_fidelity(self, beta=0, subsets=None, not_subsets=None):
         # enhanced fidelity
         return self.get_AC(beta) / \
-            self.get_solve(beta)[:, 6] / \
+            self.get_solve(beta)[:, self.wrong_species] / \
             RXN_params_yuanqi().ratio
 
     @subset_decorator
