@@ -109,7 +109,7 @@ for parameter in parameters.reshape((-1, 3)):
             k_p=K_phosphotase,
         )
 
-        result_dict["result_C0{}.csv".format(C_0)] = np.array(RD_solve(
+        result_dict["result_c_AB{}_c_C{}.csv".format(c_AB, c_C)] = np.array(RD_solve(
             c_0_tuple, t, L=L, derivs_0=0, derivs_L=0,
             diff_coeff_fun=Diff_fun, diff_coeff_params=(diff_coeffs,),
             rxn_fun=RD_rxn, rxn_params=(rxn_params,),
