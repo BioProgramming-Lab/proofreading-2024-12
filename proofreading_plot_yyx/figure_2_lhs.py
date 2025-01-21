@@ -58,7 +58,7 @@ parameter_folder = "parameters_20250117_intracellular"
 parameters = np.genfromtxt(
     "{}/{}.csv".format(parameter_folder, int(task_id) - 1), delimiter=","
 )
-output_folder = "result_20250117_intracellular"
+output_folder = "result_20250121_intracellular"
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
     print("The new directory is created!")
