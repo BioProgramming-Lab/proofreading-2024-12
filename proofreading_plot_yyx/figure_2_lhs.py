@@ -77,14 +77,14 @@ for parameter in parameters.reshape((-1, 3)):
     }
 
     # run with different beta (receiver region j_A0 factor)
-    for C_0 in [100, 1000]:
+    for c_AB, c_C in [(100, 50), (100, 100), (100, 200)]:
         c_0_tuple = (
             # c_A
-            np.full(n_gridpoints, C_0),
+            np.full(n_gridpoints, c_AB),
             # c_B
-            np.full(n_gridpoints, C_0),
+            np.full(n_gridpoints, c_AB),
             # c_C
-            np.full(n_gridpoints, 2 * C_0),
+            np.full(n_gridpoints, c_C),
             # c_Ap
             np.zeros(n_gridpoints),
             # c_Bp
