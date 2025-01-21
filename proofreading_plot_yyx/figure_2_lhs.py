@@ -250,13 +250,13 @@ meta_parameters += [
     # }
 
     MetaParameter(
-        b_ac_ap=1,
+        b_ac_rp=1,
     ),
     MetaParameter(
-        b_ac_ap=2,
+        b_ac_rp=2,
     ),
     MetaParameter(
-        b_ac_ap=2, n_rp=3
+        b_ac_rp=2, n_rp=3
     ),
     MetaParameter(
         sender_ratio=3
