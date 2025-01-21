@@ -109,8 +109,18 @@ for parameter in parameters.reshape((-1, 3)):
             k_p=K_phosphotase,
         )
 
+        derivs_0 = np.array([
+            -rxn_params.k_kin,
+            -rxn_params.k_kin,
+            0,
+            rxn_params.k_kin,
+            rxn_params.k_kin,
+            0,
+            0
+        ])
+
         result_dict["result_c_AB{}_c_C{}.csv".format(c_AB, c_C)] = np.array(RD_solve(
-            c_0_tuple, t, L=L, derivs_0=0, derivs_L=0,
+            c_0_tuple, t, L=L, derivs_0=derivs_0, derivs_L=0,
             diff_coeff_fun=Diff_fun, diff_coeff_params=(diff_coeffs,),
             rxn_fun=RD_rxn, rxn_params=(rxn_params,),
             rtol=1.49012e-8, atol=1.49012e-8
