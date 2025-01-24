@@ -261,7 +261,7 @@ def RD_rxn(c_tuple, t, rxn_coeffs, production_rate):
                     + j_self_activation_br_on_b * hill_a(c_BR) \
                     + j_self_activation_bc_on_bc * hill_a(c_BC) \
                     + j_mutual_inhibition_ac_on_bc * hill_r(c_AC) \
-                    + j_ac_rp * hill_ar(c_BR, c_AC)
+                    + j_ac_rp * hill_ar(c_BC, c_AC)
 
     # A' reaction rate
     C_rate = j_C - rxn_coeffs.k_AC * c_A * c_C + rxn_coeffs.r_AC * c_AC \

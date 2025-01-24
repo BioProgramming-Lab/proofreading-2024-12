@@ -65,7 +65,7 @@ def subset_decorator(func):
 
 
 class Simulations:
-    def __init__(self, path="./", betas=[""], n_species=8):
+    def __init__(self, path="./", betas=[""], n_species=8, load_pos=-1):
         # betas need to be a list
 
         # initial dicts
@@ -84,8 +84,8 @@ class Simulations:
 
         # load result
         for b in betas:
-            self.solve[b] = np.array(rust_lib_proofreading.read_solve_at_end(
-                path + "/result_{}.csv".format(b).replace("_.csv", ".csv"), n_species
+            self.solve[b] = np.array(rust_lib_proofreading.read_solve_at_l(
+                path + "/result_{}.csv".format(b).replace("_.csv", ".csv"), n_species, load_pos
             ))
 
         self.check_validity()
