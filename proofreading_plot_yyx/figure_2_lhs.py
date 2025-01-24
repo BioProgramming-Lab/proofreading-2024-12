@@ -258,9 +258,9 @@ meta_parameters += [
     MetaParameter(
         b_ac_rp=2, n_rp=3
     ),
-    MetaParameter(
-        sender_ratio=3
-    )
+    # MetaParameter(
+    #     sender_ratio=3
+    # )
 ]
 
 
