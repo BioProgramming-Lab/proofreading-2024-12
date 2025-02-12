@@ -1,12 +1,8 @@
 from scipy.stats import qmc
 import csv
 import numpy as np
-
-# define the number of samples and dimensions
-# num_samples = 40000
-num_samples = 800
-num_thread = 800
-num_dimensions = 5
+import zarr
+from shared import *
 
 # create sampler and sample parameters
 sampler = qmc.LatinHypercube(d=num_dimensions)
@@ -22,25 +18,19 @@ lhs_samples = sampler.random(n=num_samples)
 lhs_samples[:, 0] = lhs_samples[:, 0] * 50
 
 log_min = -5
-log_max = -3
+log_max = -2
 lhs_samples[:, 1:4] = 10 ** (
     log_min + (log_max - log_min) * lhs_samples[:, 1:4]
 )
-log_min = -5
-log_max = -2.5
+
+log_min = np.log10(2.8e-4)
+log_max = np.log10(2.8e-3)
 lhs_samples[:, 4] = 10 ** (
     log_min + (log_max - log_min) * lhs_samples[:, 4]
 )
 
-# parameter_filename = "parameters.csv"
-# with open(parameter_filename, "a") as f_p:
-#     csv_writer = csv.writer(f_p)
-#     csv_writer.writerows(lhs_samples)
-
-# save individual chunks for processing
-
-parameter_folder = "parameters_20250115_1000"
-for i, chunk in enumerate(np.vsplit(lhs_samples, num_thread)):
-    with open("{}/{}.csv".format(parameter_folder, i), "w") as f_p:
-        csv_writer = csv.writer(f_p)
-        csv_writer.writerows(chunk)
+z = zarr.create_array(
+    store="parameters_20250212",
+    data=lhs_samples,
+    chunks=(chunk_size, num_dimensions),
+)
