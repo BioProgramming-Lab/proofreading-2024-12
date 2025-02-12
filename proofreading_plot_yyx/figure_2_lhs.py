@@ -182,12 +182,12 @@ meta_parameters += [
     MetaParameter(),
 
     # hill function parameters
-    MetaParameter(n=1, k=1, b=1),
-    MetaParameter(n=3, k=1, b=1),
-    MetaParameter(n=1, k=3, b=1),
-    MetaParameter(n=1, k=6, b=1),
-    MetaParameter(n=1, k=1, b=0.5),
-    MetaParameter(n=1, k=1, b=2),
+    MetaParameter(n_ac=1, k_ac=1, b_ac=1),
+    MetaParameter(n_ac=3, k_ac=1, b_ac=1),
+    MetaParameter(n_ac=1, k_ac=3, b_ac=1),
+    MetaParameter(n_ac=1, k_ac=6, b_ac=1),
+    MetaParameter(n_ac=1, k_ac=1, b_ac=0.5),
+    MetaParameter(n_ac=1, k_ac=1, b_ac=2),
 
     # increase sender secretion rate
     MetaParameter(sender_ratio=3),
@@ -195,16 +195,8 @@ meta_parameters += [
     # extend sender region to the right
     MetaParameter(sender_region=451),
 
-    # [0, 0, 0],  # Case 1: no feedback
-    # same as baseline
-    # [1, 0, 0], # Case 2:  basal secretion in proofreading region
-    MetaParameter(proofreading_basal=1),
-    # [0, 1, 0], # Case 3:  self-activation
-    # same as n=1, k=1, b=1
-    # [1, 0, 1], # Case 4:  mutual inhibition
-    MetaParameter(proofreading_basal=1, mutual_inhibition=1),
-    # [1, 1, 1] # Case 5:  self-activation + mutual inhibition
-    MetaParameter(n=1, k=1, b=1, proofreading_basal=1, mutual_inhibition=1),
+    MetaParameter(b_rp=1),
+    MetaParameter(b_ac_rp=1),
 ]
 
 
