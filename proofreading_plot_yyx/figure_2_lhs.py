@@ -21,7 +21,7 @@ if task_id is None:
         "Unable to find environment variable SLURM_ARRAY_TASK_ID"
     )
 
-parameter_dir = "parameters_20250212_200"
+parameter_dir = "parameters_20250212"
 z = zarr.open(
     store=parameter_dir,
     mode="r",
@@ -30,7 +30,7 @@ parameters = z[
     ((task_id - 1) * chunk_size):(task_id * chunk_size)
 ]
 
-output_dir = "result_20250212_200_step_t"
+output_dir = "result_20250212"
 z = zarr.open_group(
     store=output_dir,
     mode="a",
