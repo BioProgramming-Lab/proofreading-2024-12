@@ -4,7 +4,7 @@ import numpy as np
 # * initialize parameters
 
 # Time points
-t = np.arange(0, 3600 * 49, 900)
+t = np.arange(0, 3600 * 49, 3600)
 t_record = t[[-1]]
 
 # number of grid points
@@ -117,3 +117,39 @@ class MetaParameter(dict):
             return "baseline"
         else:
             return "_".join(map(lambda x: x + str(self[x]), keys))
+
+
+# setup hill function parameters
+# (beta, k, n)
+meta_parameters = [
+    # base line (no feedback)
+    MetaParameter(),
+
+    # # hill function parameters
+    # MetaParameter(n_ac=1, k_ac=1, b_ac=1),
+    # MetaParameter(n_ac=3, k_ac=1, b_ac=1),
+    # MetaParameter(n_ac=6, k_ac=1, b_ac=1),
+    # MetaParameter(n_ac=1, k_ac=3, b_ac=1),
+    # MetaParameter(n_ac=1, k_ac=6, b_ac=1),
+    # MetaParameter(n_ac=1, k_ac=1, b_ac=0.5),
+    # MetaParameter(n_ac=1, k_ac=1, b_ac=2),
+
+    # # increase sender secretion rate
+    # MetaParameter(sender_ratio=3),
+
+    # # extend sender region to the right
+    # MetaParameter(sender_region=451),
+
+    # MetaParameter(b_rp=1),
+    # MetaParameter(b_ac_rp=1),
+]
+
+
+# Replace with your MinIO credentials and endpoint
+minio_endpoint = "http://10.16.21.7:9000"
+access_key = "minioadmin"
+secret_key = "minioadmin"
+parameter_bucket = "parameter"  # Replace with the actual bucket name
+result_bucket = "result1"
+parameter_file = "parameter_20250216.zarr"
+result_file = "result_20250216.zarr"

@@ -1,14 +1,10 @@
-from contextlib import ExitStack
 import numpy as np
 from rd_solver import *
 import os
-import fcntl
-import csv
-from itertools import product
 import zarr
-from enum import Enum
-
+import fcntl
 from shared import *
+import s3fs
 
 
 
@@ -21,186 +17,43 @@ if task_id is None:
         "Unable to find environment variable SLURM_ARRAY_TASK_ID"
     )
 
-parameter_dir = "parameters_20250212"
+# open minio file system
+fs = s3fs.S3FileSystem(
+    key=access_key,
+    secret=secret_key,
+    endpoint_url=minio_endpoint,
+    use_ssl=False,
+    asynchronous=True,
+)
+
+# read parameter
+store = zarr.storage.FsspecStore(
+    fs=fs,
+    read_only=True,
+    path=f"{parameter_bucket}/{parameter_file}",
+)
 z = zarr.open(
-    store=parameter_dir,
+    store=store,
     mode="r",
 )
 parameters = z[
     ((task_id - 1) * chunk_size):(task_id * chunk_size)
 ]
 
-output_dir = "result_20250212"
-z = zarr.open_group(
-    store=output_dir,
+# open result zarr
+store = zarr.storage.FsspecStore(
+    fs=fs,
+    read_only=False,
+    path=f"{result_bucket}/{result_file}",
+)
+z = zarr.open(
+    store=store,
     mode="a",
 )
 
 
 
-
-# setup hill function parameters
-# (beta, k, n)
-meta_parameters = []
-
-# ------------ 20250115
-# meta_parameters += [
-#     # just to take a note on the previously default parameter
-#     # DEFAULT_META_PARAMETERS = {
-#     #     "b": 0,
-#     #     "k": 1,
-#     #     "n": 1,
-#     #     "sender_region": 200,
-#     #     "receiver_region": 251,
-#     #     "sender_ratio": 1,
-#     #     "n_gridpoints": 451,
-#     #     "proofreading_basal": 0,
-#     #     "mutual_inhibition": 0,
-#     #     "receptor_preequilibium": 0
-#     # }
-
-
-#     # base line (no feedback)
-#     MetaParameter(),
-
-#     # hill function parameters
-#     MetaParameter(n=1, k=1, b=1),
-#     MetaParameter(n=3, k=1, b=1),
-#     MetaParameter(n=1, k=3, b=1),
-#     MetaParameter(n=1, k=6, b=1),
-#     MetaParameter(n=1, k=1, b=0.5),
-#     MetaParameter(n=1, k=1, b=2),
-
-#     # increase sender secretion rate
-#     MetaParameter(sender_ratio=3),
-
-#     # extend sender region to the right
-#     MetaParameter(sender_region=451),
-
-#     # extend sender region X3 to the left
-#     MetaParameter(sender_region=600, n_gridpoints=851),
-
-#     # [0, 0, 0],  # Case 1: no feedback
-#     # same as baseline
-#     # [1, 0, 0], # Case 2:  basal secretion in proofreading region
-#     MetaParameter(proofreading_basal=1),
-#     # [0, 1, 0], # Case 3:  self-activation
-#     # same as n=1, k=1, b=1
-#     # [1, 0, 1], # Case 4:  mutual inhibition
-#     MetaParameter(proofreading_basal=1, mutual_inhibition=1),
-#     # [1, 1, 1] # Case 5:  self-activation + mutual inhibition
-#     MetaParameter(n=1, k=1, b=1, proofreading_basal=1, mutual_inhibition=1),
-#     # pre equilibrium receptor concentration
-#     MetaParameter(receptor_preequilibium=1),
-# ]
-
-
-# --------------- 20250116
-# just to take a note on the previously default parameter
-# DEFAULT_META_PARAMETERS = {
-#     "b_ac_rp": 0,
-#     "b_ac": 0,
-#     "k_ac": 1,
-#     "n_ac": 1,
-#     "b_rp": 0,
-#     "n_rp": 1,
-#     "k_rp": 1,
-#     "sender_region": 200,
-#     "receiver_region": 251,
-#     "sender_ratio": 1,
-#     "n_gridpoints": 451,
-#     "receptor_preequilibium": 0
-# }
-
-# meta_parameters.append(MetaParameter())
-# for b_ac, b_rp, k_ac, k_rp, n_ac, n_rp in product(
-#     [0, 1, 2],
-#     [0, 1, 2],
-#     [1, 10, 100],
-#     [1, 10, 100, 1000],
-#     [1, 3],
-#     [1, 3],
-# ):
-#     if b_ac == 0 and b_rp == 0:
-#         continue
-#     meta_parameters.append(
-#         MetaParameter(
-#             b_ac=b_ac, b_rp=b_rp, k_ac=k_ac, k_rp=k_rp, n_ac=n_ac, n_rp=n_rp,
-#         )
-#     )
-# for b_ac_rp, k_ac, k_rp, n_ac, n_rp in product(
-#     [1, 2],
-#     [1, 10, 100],
-#     [1, 10, 100, 1000],
-#     [1, 3],
-#     [1, 3],
-# ):
-#     meta_parameters.append(
-#         MetaParameter(
-#             b_ac_rp=b_ac_rp, k_ac=k_ac, k_rp=k_rp, n_ac=n_ac, n_rp=n_rp,
-#         )
-#     )
-
-# ------------ 20250121
-# meta_parameters += [
-#     # just to take a note on the previously default parameter
-#     # DEFAULT_META_PARAMETERS = {
-#     #     # beta for activator, repressor co-affect one same output
-#     #     # k and n is extracted from the standalone version
-#     #     "b_ac_rp": 0,
-#     #     # beta for activator affect one individual output
-#     #     "b_ac": 0,
-#     #     "k_ac": 1,
-#     #     "n_ac": 1,
-#     #     # beta for repressor affect one individual output
-#     #     "b_rp": 0,
-#     #     "n_rp": 1,
-#     #     "k_rp": 1,
-#     #     "sender_region": 200,
-#     #     "receiver_region": 251,
-#     #     "sender_ratio": 1,
-#     #     "n_gridpoints": 451,
-#     #     "receptor_preequilibium": 0
-#     # }
-
-#     # MetaParameter(
-#     #     b_ac_rp=1,
-#     # ),
-#     # MetaParameter(
-#     #     b_ac_rp=2,
-#     # ),
-#     # MetaParameter(
-#     #     b_ac_rp=2, n_rp=3
-#     # ),
-#     # MetaParameter(
-#     #     sender_ratio=3
-#     # )
-# ]
-
-meta_parameters += [
-    # base line (no feedback)
-    MetaParameter(),
-
-    # hill function parameters
-    MetaParameter(n_ac=1, k_ac=1, b_ac=1),
-    MetaParameter(n_ac=3, k_ac=1, b_ac=1),
-    MetaParameter(n_ac=1, k_ac=3, b_ac=1),
-    MetaParameter(n_ac=1, k_ac=6, b_ac=1),
-    MetaParameter(n_ac=1, k_ac=1, b_ac=0.5),
-    MetaParameter(n_ac=1, k_ac=1, b_ac=2),
-
-    # increase sender secretion rate
-    MetaParameter(sender_ratio=3),
-
-    # extend sender region to the right
-    MetaParameter(sender_region=451),
-
-    MetaParameter(b_rp=1),
-    MetaParameter(b_ac_rp=1),
-]
-
-
-
+results = {}
 for i, parameter in enumerate(parameters.reshape((-1, 5))):
     # randomize parameters
     D_0 = parameter[0]
@@ -210,7 +63,7 @@ for i, parameter in enumerate(parameters.reshape((-1, 5))):
     gamma0 = parameter[4]
 
     # run with different beta (receiver region j_A0 factor)
-    for meta_parameter in meta_parameters:
+    for j, meta_parameter in enumerate(meta_parameters):
         c_0_tuple = (
             # c_A
             np.zeros(meta_parameter["n_gridpoints"]),
@@ -321,27 +174,42 @@ for i, parameter in enumerate(parameters.reshape((-1, 5))):
             rtol=1.49012e-8, atol=1.49012e-8
         ))
 
-        # storage configuration
-        # root
-        # ├─ meta_parameter
-        # |  ├─ time
-        # |  |  ├─ chemical species
-        # |  |  |  n_sim X n_grid (chunk: chunk_size X n_grid)
-        # |  |  |
-        # ...
+        results[(i, j)] = res
 
-        group_meta_parameter = z.require_group(meta_parameter.as_string())
-        group_meta_parameter.attrs.update(meta_parameter)
-        for _t in t_record:
-            group_t = group_meta_parameter.require_group(str(_t))
-            for s in Species:
-                array_s = group_t.require_array(
-                    name=s.name,
-                    dtype=res.dtype,
-                    shape=(chunk_size * num_thread, n_gridpoints),
-                    chunks=(chunk_size, n_gridpoints),
-                )
 
-                array_s[
-                    ((task_id - 1) * chunk_size) + i, :
-                ] = res[s.value, list(t).index(_t), :]
+# storage configuration
+# root
+# ├─ meta_parameter
+# |  ├─ time
+# |  |  ├─ chemical species
+# |  |  |  n_sim X n_grid (chunk: chunk_size X n_grid)
+# |  |  |
+# ...
+
+
+import time
+start = time.time()
+for j, meta_parameter in enumerate(meta_parameters):
+    group_meta_parameter = z.require_group(meta_parameter.as_string())
+    group_meta_parameter.attrs.update(meta_parameter)
+    for _t in t_record:
+        array_s_sim_l = group_meta_parameter.require_array(
+            name=str(_t),
+            dtype=res.dtype,
+            shape=(len(Species), chunk_size * num_thread, n_gridpoints),
+            chunks=(len(Species), chunk_size, n_gridpoints),
+        )
+
+        chunk_s = []
+
+        for s in Species:
+            chunk = []
+            for i, parameter in enumerate(parameters.reshape((-1, 5))):
+                chunk.append(results[(i, j)][s.value, list(t).index(_t), :])
+
+            chunk_s.append(chunk)
+        array_s_sim_l[
+            :, ((task_id - 1) * chunk_size):(task_id * chunk_size), :
+        ] = chunk_s
+
+print(time.time() - start)

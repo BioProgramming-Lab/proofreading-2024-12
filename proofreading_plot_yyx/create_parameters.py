@@ -3,6 +3,7 @@ import csv
 import numpy as np
 import zarr
 from shared import *
+import s3fs
 
 # create sampler and sample parameters
 sampler = qmc.LatinHypercube(d=num_dimensions)
@@ -23,14 +24,33 @@ lhs_samples[:, 1:4] = 10 ** (
     log_min + (log_max - log_min) * lhs_samples[:, 1:4]
 )
 
-log_min = np.log10(2.8e-4)
-log_max = np.log10(2.8e-3)
+log_min = -5
+log_max = -2
 lhs_samples[:, 4] = 10 ** (
     log_min + (log_max - log_min) * lhs_samples[:, 4]
 )
 
-z = zarr.create_array(
-    store="parameters_20250212",
-    data=lhs_samples,
-    chunks=(chunk_size, num_dimensions),
+fs = s3fs.S3FileSystem(
+    key=access_key,
+    secret=secret_key,
+    endpoint_url=minio_endpoint,
+    use_ssl=False,
+    asynchronous=True,
 )
+
+# store = s3fs.S3Map(root=f"{parameter_bucket}/{parameter_file}", s3=fs)
+# store = fsspec.get_mapper(f"{parameter_bucket}/{parameter_file}", s3=fs)
+store = zarr.storage.FsspecStore(
+    fs=fs,
+    read_only=False,
+    path=f"{parameter_bucket}/{parameter_file}",
+)
+z = zarr.open(
+    store=store,
+    mode="w",
+    shape=lhs_samples.shape,
+    chunks=(chunk_size, num_dimensions),
+    dtype=lhs_samples.dtype,
+)
+
+z[:] = lhs_samples
