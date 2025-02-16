@@ -38,13 +38,7 @@ fs = s3fs.S3FileSystem(
     asynchronous=True,
 )
 
-# store = s3fs.S3Map(root=f"{parameter_bucket}/{parameter_file}", s3=fs)
-# store = fsspec.get_mapper(f"{parameter_bucket}/{parameter_file}", s3=fs)
-store = zarr.storage.FsspecStore(
-    fs=fs,
-    read_only=False,
-    path=f"{parameter_bucket}/{parameter_file}",
-)
+store = "parameters_20250216"
 z = zarr.open(
     store=store,
     mode="w",

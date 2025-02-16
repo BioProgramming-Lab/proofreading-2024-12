@@ -1,11 +1,9 @@
+import time
 import numpy as np
 from rd_solver import *
 import os
 import zarr
-import fcntl
 from shared import *
-import s3fs
-
 
 
 diff_coeffs = DIFFUSION()
@@ -17,21 +15,8 @@ if task_id is None:
         "Unable to find environment variable SLURM_ARRAY_TASK_ID"
     )
 
-# open minio file system
-fs = s3fs.S3FileSystem(
-    key=access_key,
-    secret=secret_key,
-    endpoint_url=minio_endpoint,
-    use_ssl=False,
-    asynchronous=True,
-)
-
 # read parameter
-store = zarr.storage.FsspecStore(
-    fs=fs,
-    read_only=True,
-    path=f"{parameter_bucket}/{parameter_file}",
-)
+store = "parameters_20250216"
 z = zarr.open(
     store=store,
     mode="r",
@@ -41,16 +26,11 @@ parameters = z[
 ]
 
 # open result zarr
-store = zarr.storage.FsspecStore(
-    fs=fs,
-    read_only=False,
-    path=f"{result_bucket}/{result_file}",
-)
+store = "result_20250216"
 z = zarr.open(
     store=store,
     mode="a",
 )
-
 
 
 results = {}
@@ -187,7 +167,6 @@ for i, parameter in enumerate(parameters.reshape((-1, 5))):
 # ...
 
 
-import time
 start = time.time()
 for j, meta_parameter in enumerate(meta_parameters):
     group_meta_parameter = z.require_group(meta_parameter.as_string())
