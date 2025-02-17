@@ -242,7 +242,6 @@ def RD_rxn(c_tuple, t, rxn_coeffs, production_rate):
         j_self_activation_ac_on_ac, j_self_activation_bc_on_bc,
         j_mutual_inhibition_ac_on_bc, j_mutual_inhibition_bc_on_ac,
         j_ac_rp,
-        j_R
     ) = production_rate
     
     # A reaction rate
@@ -282,8 +281,8 @@ def RD_rxn(c_tuple, t, rxn_coeffs, production_rate):
     R_rate = j_R - rxn_coeffs.k_AR * c_A * c_R + rxn_coeffs.r_AR * c_AR + rxn_coeffs.gamma1 * c_AR \
                 - rxn_coeffs.k_BR * c_B * c_R + rxn_coeffs.r_BR * c_BR + rxn_coeffs.gamma1 * c_BR
     '''   
-    R_rate = j_R- rxn_coeffs.k_AR * c_A * c_R + rxn_coeffs.r_AR * c_AR + rxn_coeffs.gamma * c_AR \
-                - rxn_coeffs.k_BR * c_B * c_R + rxn_coeffs.r_BR * c_BR + rxn_coeffs.gamma * c_BR - rxn_coeffs.deg * c_R
+    R_rate = - rxn_coeffs.k_AR * c_A * c_R + rxn_coeffs.r_AR * c_AR + rxn_coeffs.gamma * c_AR \
+                - rxn_coeffs.k_BR * c_B * c_R + rxn_coeffs.r_BR * c_BR + rxn_coeffs.gamma * c_BR
 
     # AA' reaction rate
     ac_rate = rxn_coeffs.k_AC * c_A * c_C - rxn_coeffs.r_AC * c_AC - rxn_coeffs.deg * c_AC 
@@ -292,10 +291,10 @@ def RD_rxn(c_tuple, t, rxn_coeffs, production_rate):
     bc_rate = rxn_coeffs.k_BC * c_B * c_C - rxn_coeffs.r_BC * c_BC - rxn_coeffs.deg * c_BC 
 
     # A-Receptor reaction rate (assume constant turnover)
-    ar_rate = rxn_coeffs.k_AR * c_A * c_R - (rxn_coeffs.r_AR + rxn_coeffs.gamma) * c_AR - rxn_coeffs.deg * c_AR            
+    ar_rate = rxn_coeffs.k_AR * c_A * c_R - (rxn_coeffs.r_AR + rxn_coeffs.gamma) * c_AR
 
     # B-Receptor reaction rate (assume constant turnover)
-    br_rate = rxn_coeffs.k_BR * c_B * c_R - (rxn_coeffs.r_BR + rxn_coeffs.gamma) * c_BR - rxn_coeffs.deg * c_BR
+    br_rate = rxn_coeffs.k_BR * c_B * c_R - (rxn_coeffs.r_BR + rxn_coeffs.gamma) * c_BR
 
     
     return (A_rate, B_rate, C_rate, R_rate, ac_rate, bc_rate, ar_rate, br_rate)

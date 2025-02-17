@@ -16,7 +16,7 @@ if task_id is None:
     )
 
 # read parameter
-store = "parameters_20250216"
+store = "parameters_20250217"
 z = zarr.open(
     store=store,
     mode="r",
@@ -26,7 +26,7 @@ parameters = z[
 ]
 
 # open result zarr
-store = "result_20250216"
+store = "result_20250217"
 z = zarr.open(
     store=store,
     mode="a",
@@ -38,7 +38,7 @@ for i, parameter in enumerate(parameters.reshape((-1, 5))):
     # randomize parameters
     D_0 = parameter[0]
     j_A0 = parameter[1]
-    j_R0 = parameter[2]
+    r_total = parameter[2]
     koff_AR0 = parameter[3]
     gamma0 = parameter[4]
 
@@ -62,6 +62,9 @@ for i, parameter in enumerate(parameters.reshape((-1, 5))):
             # c_BR
             np.zeros(meta_parameter["n_gridpoints"]),
         )
+        c_0_tuple[Species.R.value][
+            meta_parameter["n_gridpoints"] - meta_parameter["receiver_region"]:
+        ] = r_total
 
         # * run simulation
         # diffusion rate of each molecule
@@ -82,10 +85,10 @@ for i, parameter in enumerate(parameters.reshape((-1, 5))):
         j_C = np.zeros(meta_parameter["n_gridpoints"])
         j_C[0:meta_parameter["sender_region"]] = j_A0 * 2 * \
             meta_parameter["sender_ratio"]
-        # j_R: the secretion rate of free receptor
-        j_R = np.zeros(meta_parameter["n_gridpoints"])
-        j_R[meta_parameter["n_gridpoints"] -
-            meta_parameter["receiver_region"]:] = j_R0
+        # # j_R: the secretion rate of free receptor
+        # j_R = np.zeros(meta_parameter["n_gridpoints"])
+        # j_R[meta_parameter["n_gridpoints"] -
+        #     meta_parameter["receiver_region"]:] = j_R0
 
         # self_activation production of free A
         j_self_activation_ar_on_a = np.zeros(meta_parameter["n_gridpoints"])
@@ -137,7 +140,6 @@ for i, parameter in enumerate(parameters.reshape((-1, 5))):
             j_self_activation_ac_on_ac, j_self_activation_bc_on_bc,
             j_mutual_inhibition_ac_on_bc, j_mutual_inhibition_bc_on_ac,
             j_ac_rp,
-            j_R,
         )
         rxn_params = RXN_params_yuanqi(
             r_AR=koff_AR0, r_BR=koff_AR0, gamma=gamma0,

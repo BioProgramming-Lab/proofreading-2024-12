@@ -23,13 +23,19 @@ lhs_samples[:, 1:4] = 10 ** (
     log_min + (log_max - log_min) * lhs_samples[:, 1:4]
 )
 
+log_min = np.log10(0.0375)
+log_max = np.log10(2.7)
+lhs_samples[:, 2] = 10 ** (
+    log_min + (log_max - log_min) * lhs_samples[:, 2]
+)
+
 log_min = -5
 log_max = -2
 lhs_samples[:, 4] = 10 ** (
     log_min + (log_max - log_min) * lhs_samples[:, 4]
 )
 
-store = "parameters_20250216"
+store = "parameters_20250217"
 z = zarr.open(
     store=store,
     mode="w",

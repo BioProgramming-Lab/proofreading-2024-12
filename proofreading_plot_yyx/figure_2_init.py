@@ -4,7 +4,7 @@ import numpy as np
 import zarr
 
 # open result zarr
-store = "result_20250216"
+store = "result_20250217"
 z = zarr.open(
     store=store,
     mode="w",
