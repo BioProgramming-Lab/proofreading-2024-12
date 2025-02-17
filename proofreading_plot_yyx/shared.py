@@ -125,23 +125,23 @@ meta_parameters = [
     # base line (no feedback)
     MetaParameter(),
 
-    # # hill function parameters
-    # MetaParameter(n_ac=1, k_ac=1, b_ac=1),
-    # MetaParameter(n_ac=3, k_ac=1, b_ac=1),
-    # MetaParameter(n_ac=6, k_ac=1, b_ac=1),
-    # MetaParameter(n_ac=1, k_ac=3, b_ac=1),
-    # MetaParameter(n_ac=1, k_ac=6, b_ac=1),
-    # MetaParameter(n_ac=1, k_ac=1, b_ac=0.5),
-    # MetaParameter(n_ac=1, k_ac=1, b_ac=2),
+    # hill function parameters
+    MetaParameter(n_ac=1, k_ac=1, b_ac=1),
+    MetaParameter(n_ac=3, k_ac=1, b_ac=1),
+    MetaParameter(n_ac=6, k_ac=1, b_ac=1),
+    MetaParameter(n_ac=1, k_ac=3, b_ac=1),
+    MetaParameter(n_ac=1, k_ac=6, b_ac=1),
+    MetaParameter(n_ac=1, k_ac=1, b_ac=0.5),
+    MetaParameter(n_ac=1, k_ac=1, b_ac=2),
 
-    # # increase sender secretion rate
-    # MetaParameter(sender_ratio=3),
+    # increase sender secretion rate
+    MetaParameter(sender_ratio=3),
 
-    # # extend sender region to the right
-    # MetaParameter(sender_region=451),
+    # extend sender region to the right
+    MetaParameter(sender_region=451),
 
-    # MetaParameter(b_rp=1),
-    # MetaParameter(b_ac_rp=1),
+    MetaParameter(b_rp=1),
+    MetaParameter(b_ac_rp=1),
 ]
 
 

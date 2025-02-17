@@ -169,15 +169,10 @@ for i, parameter in enumerate(parameters.reshape((-1, 5))):
 
 start = time.time()
 for j, meta_parameter in enumerate(meta_parameters):
-    group_meta_parameter = z.require_group(meta_parameter.as_string())
-    group_meta_parameter.attrs.update(meta_parameter)
+    group_meta_parameter = z[meta_parameter.as_string()]
+    # group_meta_parameter.attrs.update(meta_parameter)
     for _t in t_record:
-        array_s_sim_l = group_meta_parameter.require_array(
-            name=str(_t),
-            dtype=res.dtype,
-            shape=(len(Species), chunk_size * num_thread, n_gridpoints),
-            chunks=(len(Species), chunk_size, n_gridpoints),
-        )
+        array_s_sim_l = group_meta_parameter[str(_t)]
 
         chunk_s = []
 
