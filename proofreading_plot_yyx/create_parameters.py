@@ -3,7 +3,6 @@ import csv
 import numpy as np
 import zarr
 from shared import *
-import s3fs
 
 # create sampler and sample parameters
 sampler = qmc.LatinHypercube(d=num_dimensions)
@@ -28,14 +27,6 @@ log_min = -5
 log_max = -2
 lhs_samples[:, 4] = 10 ** (
     log_min + (log_max - log_min) * lhs_samples[:, 4]
-)
-
-fs = s3fs.S3FileSystem(
-    key=access_key,
-    secret=secret_key,
-    endpoint_url=minio_endpoint,
-    use_ssl=False,
-    asynchronous=True,
 )
 
 store = "parameters_20250216"
