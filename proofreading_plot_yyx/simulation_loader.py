@@ -188,7 +188,7 @@ class Simulations:
     @subset_decorator
     def get_fidelity(self, beta=0, subsets=None, not_subsets=None):
         # enhanced fidelity
-        return self.get_AC(beta) / \
+        return self.get_AC(beta) / 10 / \
             self.get_solve(beta)[:, self.species.BC.value]
 
     @subset_decorator
