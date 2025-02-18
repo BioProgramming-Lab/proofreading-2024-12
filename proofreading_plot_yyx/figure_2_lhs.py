@@ -26,7 +26,7 @@ parameters = z[
 ]
 
 # open result zarr
-store = "result_20250217_2"
+store = "result_20250217_5"
 z = zarr.open(
     store=store,
     mode="a",
@@ -153,7 +153,7 @@ for i, parameter in enumerate(parameters.reshape((-1, 5))):
             c_0_tuple, t, L=L, derivs_0=0, derivs_L=0,
             diff_coeff_fun=Diff_fun, diff_coeff_params=(diff_coeffs,),
             rxn_fun=RD_rxn, rxn_params=(rxn_params, production_rate),
-            rtol=1.49012e-8, atol=1.49012e-8
+            rtol=1e-6, atol=1e-6
         ))
 
         results[(i, j)] = res
