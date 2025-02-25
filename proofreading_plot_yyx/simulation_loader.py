@@ -1,6 +1,4 @@
 import numpy as np
-import rust_lib_proofreading
-from RXN_params_yuanqi import RXN_params_yuanqi
 from shared import *
 import zarr
 
@@ -188,7 +186,7 @@ class Simulations:
     @subset_decorator
     def get_fidelity(self, beta=0, subsets=None, not_subsets=None):
         # enhanced fidelity
-        return self.get_AC(beta) / 10 / \
+        return self.get_AC(beta) / RXN_params_yuanqi.ratio / \
             self.get_solve(beta)[:, self.species.CBp.value]
 
     @subset_decorator
