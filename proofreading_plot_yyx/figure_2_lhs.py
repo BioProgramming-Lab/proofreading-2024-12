@@ -1,90 +1,56 @@
-from contextlib import ExitStack
+import time
 import numpy as np
 from rd_solver import *
 import os
-import fcntl
-import csv
-from itertools import product
-
-
-class RXN_params_yuanqi(object):
-    """
-    Container for reaction parameters
-    """
-    def __init__(self, **kwargs):
-        """
-        k_kin: kinase rate on membrane boundary(x=0)
-        k_p: phosphotase rate in cytosol 
-        k_CAp: association rate for Ap and A'
-        r_CAp: dissociation rate for A'-Ap complex
-        k_CBp: association rate for Ap and A'
-        r_CBp: dissociation rate for A'-Bp complex
-        """
-        self.k_kin = 0.2 #nM/s
-        self.k_p = 5 #/s
-        self.k_CAp = 0.1 # /nM/s = 10^5 /M/s
-        self.r_CAp = 0.1 # /s
-        self.k_CBp = 0.1 # /nM/s = 10^5 /M/s
-        self.r_CBp = 1 # /s
-
-        self.ratio = self.r_CBp / self.r_CAp
-        
-        # Put in params that were specified in input
-        for entry in kwargs:
-            setattr(self, entry, kwargs[entry])
-
-# * initialize parameters
-
-
-# number of grid points 
-n_gridpoints = 101
-grid_spacing = 0.1 # µm
-# time 60s 
-t = np.arange(1, 61)
-
-# Physical length of system
-L = grid_spacing * (n_gridpoints - 1) # µm = 10µm
+import zarr
+from shared import *
 
 
 diff_coeffs = DIFFUSION()
 
 # read pre-generated parameters
-task_id = os.getenv("SLURM_ARRAY_TASK_ID")
+task_id = int(os.getenv("SLURM_ARRAY_TASK_ID"))
 if task_id is None:
     raise Exception(
         "Unable to find environment variable SLURM_ARRAY_TASK_ID"
     )
-parameter_folder = "parameters_20250117_intracellular"
-parameters = np.genfromtxt(
-    "{}/{}.csv".format(parameter_folder, int(task_id) - 1), delimiter=","
+
+# read parameter
+store = "parameters_20250225"
+z = zarr.open(
+    store=store,
+    mode="r",
 )
-output_folder = "result_20250121_intracellular"
-if not os.path.exists(output_folder):
-    os.makedirs(output_folder)
-    print("The new directory is created!")
+parameters = z[
+    ((task_id - 1) * chunk_size):(task_id * chunk_size)
+]
+
+# open result zarr
+store = "result_20250225"
+z = zarr.open(
+    store=store,
+    mode="a",
+)
 
    
 
-for parameter in parameters.reshape((-1, 3)):
+results = {}
+for i, parameter in enumerate(parameters.reshape((-1, num_dimensions))):
     # randomize parameters
     D_0 = parameter[0]
-    K_kinase = parameter[1]
-    K_phosphotase = parameter[2]
-
-    # use a dictionary to save all filenames and result
-    result_dict = {
-        "parameters.csv": parameter,
-    }
+    k_kinase = parameter[1]
+    k_phosphotase = parameter[2]
+    c_0 = parameter[3]
 
     # run with different beta (receiver region j_A0 factor)
-    for c_AB, c_C in [(100, 50), (100, 100), (100, 200)]:
+    for j, meta_parameter in enumerate(meta_parameters):
         c_0_tuple = (
             # c_A
-            np.full(n_gridpoints, c_AB),
+            np.full(n_gridpoints, c_0),
             # c_B
-            np.full(n_gridpoints, c_AB),
+            np.full(n_gridpoints, c_0),
             # c_C
-            np.full(n_gridpoints, c_C),
+            np.full(n_gridpoints, c_0),
             # c_Ap
             np.zeros(n_gridpoints),
             # c_Bp
@@ -105,8 +71,8 @@ for parameter in parameters.reshape((-1, 3)):
         diff_coeffs.D_complex = D_0  # um^2/s
 
         rxn_params = RXN_params_yuanqi(
-            k_kin=K_kinase,
-            k_p=K_phosphotase,
+            k_kin=k_kinase,
+            k_p=k_phosphotase,
         )
 
         derivs_0 = np.array([
@@ -119,31 +85,43 @@ for parameter in parameters.reshape((-1, 3)):
             0
         ])
 
-        result_dict["result_c_AB{}_c_C{}.csv".format(c_AB, c_C)] = np.array(RD_solve(
+        res = np.array(RD_solve(
             c_0_tuple, t, L=L, derivs_0=derivs_0, derivs_L=0,
             diff_coeff_fun=Diff_fun, diff_coeff_params=(diff_coeffs,),
             rxn_fun=RD_rxn, rxn_params=(rxn_params,),
-            rtol=1.49012e-8, atol=1.49012e-8
-        ))[:, -1, :]
+            rtol=1e-6, atol=1e-6
+        ))
 
-    # use fcntl save all data at same time
-    with ExitStack() as stack:
-        files = [
-            stack.enter_context(
-                open(os.path.join(output_folder, fname), "a")
-            ) for fname in result_dict
-        ]
+        results[(i, j)] = res
 
-        for f in files:
-            fcntl.flock(f, fcntl.LOCK_EX)
 
-        for f, k in zip(files, result_dict):
-            csv_writer = csv.writer(f)
-            if k == "parameters.csv":
-                csv_writer.writerow(result_dict[k])
-            else:
-                csv_writer.writerows(result_dict[k])
+# storage configuration
+# root
+# ├─ meta_parameter
+# |  ├─ time
+# |  |  ├─ chemical species
+# |  |  |  n_sim X n_grid (chunk: chunk_size X n_grid)
+# |  |  |
+# ...
 
-        for f in files:
-            fcntl.flock(f, fcntl.LOCK_UN)
 
+start = time.time()
+for j, meta_parameter in enumerate(meta_parameters):
+    group_meta_parameter = z[meta_parameter.as_string()]
+    # group_meta_parameter.attrs.update(meta_parameter)
+    for _t in t_record:
+        array_s_sim_l = group_meta_parameter[str(_t)]
+
+        chunk_s = []
+
+        for s in Species:
+            chunk = []
+            for i, parameter in enumerate(parameters.reshape((-1, num_dimensions))):
+                chunk.append(results[(i, j)][s.value, list(t).index(_t), :])
+
+            chunk_s.append(chunk)
+        array_s_sim_l[
+            :, ((task_id - 1) * chunk_size):(task_id * chunk_size), :
+        ] = chunk_s
+
+print(time.time() - start)

@@ -1,12 +1,8 @@
 from scipy.stats import qmc
 import csv
 import numpy as np
-
-# define the number of samples and dimensions
-num_samples = 40000
-# num_samples = 800
-num_thread = 800
-num_dimensions = 3
+import zarr
+from shared import *
 
 # create sampler and sample parameters
 sampler = qmc.LatinHypercube(d=num_dimensions)
@@ -22,20 +18,24 @@ lhs_samples = sampler.random(n=num_samples)
 lhs_samples[:, 0] = lhs_samples[:, 0] * 10
 
 log_min = -1
-log_max = 1
+log_max = 2
 lhs_samples[:, 1:3] = 10 ** (
-    log_min + (log_max - log_min) * lhs_samples[:, 1:4]
+    log_min + (log_max - log_min) * lhs_samples[:, 1:3]
 )
 
-# parameter_filename = "parameters.csv"
-# with open(parameter_filename, "a") as f_p:
-#     csv_writer = csv.writer(f_p)
-#     csv_writer.writerows(lhs_samples)
+log_min = 0
+log_max = 2
+lhs_samples[:, 3] = 10 ** (
+    log_min + (log_max - log_min) * lhs_samples[:, 3]
+)
 
-# save individual chunks for processing
+store = "parameters_20250225"
+z = zarr.open(
+    store=store,
+    mode="w",
+    shape=lhs_samples.shape,
+    chunks=(chunk_size, num_dimensions),
+    dtype=lhs_samples.dtype,
+)
 
-parameter_folder = "parameters_20250117_intracellular"
-for i, chunk in enumerate(np.vsplit(lhs_samples, num_thread)):
-    with open("{}/{}.csv".format(parameter_folder, i), "w") as f_p:
-        csv_writer = csv.writer(f_p)
-        csv_writer.writerows(chunk)
+z[:] = lhs_samples

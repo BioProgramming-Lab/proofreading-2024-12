@@ -10,8 +10,8 @@ enum Error {
     CSVOpen(csv::Error),
     #[error("Failed to read csv record: {0}")]
     CSVRecord(csv::Error),
-    #[error("Failed to find last data in csv record: {0:?}")]
-    CSVRecordLastData(csv::StringRecord),
+    #[error("Failed to find pos {0} data in csv record: {1:?}")]
+    CSVRecordNoPos(usize, csv::StringRecord),
     #[error("Failed to parse data: {0}")]
     Parse(std::num::ParseFloatError),
     #[allow(unused)]
@@ -24,7 +24,7 @@ impl From<Error> for PyErr {
         match e {
             Error::CSVOpen(_) => PyIOError::new_err(e.to_string()),
             Error::CSVRecord(_) => PyIOError::new_err(e.to_string()),
-            Error::CSVRecordLastData(_) => PyIOError::new_err(e.to_string()),
+            Error::CSVRecordNoPos(_, _) => PyIOError::new_err(e.to_string()),
             Error::Parse(_) => PyRuntimeError::new_err(e.to_string()),
             Error::Todo => PyNotImplementedError::new_err("todo"),
         }
@@ -85,7 +85,7 @@ fn read_solve_at_end(filename: &str, n_species: usize) -> PyResult<Vec<Vec<f32>>
             Ok(record) => record
                 // only retain the last data in each simulation
                 .get(record.len() - 1)
-                .map_or(Err(Error::CSVRecordLastData(record.clone())), |v| {
+                .map_or(Err(Error::CSVRecordNoPos(record.len() - 1, record.clone())), |v| {
                     v.parse().map_err(Error::Parse)
                 }),
             Err(e) => Err(Error::CSVRecord(e)),
@@ -96,6 +96,60 @@ fn read_solve_at_end(filename: &str, n_species: usize) -> PyResult<Vec<Vec<f32>>
         .collect::<Result<Vec<_>, _>>()?)
 }
 
+#[pyfunction]
+fn read_solve_at_l(filename: &str, n_species: usize, l: isize) -> PyResult<Vec<Vec<f32>>> {
+    let mut rdr = csv::ReaderBuilder::new()
+        .has_headers(false)
+        .from_path(filename)
+        .map_err(Error::CSVOpen)?;
+
+    // map and collect entire csv data, `Iterator<Result<StringRecord, Error>>` into `Result<Vec<Vec<f32>>>`
+    Ok(rdr
+        .records()
+        // map and collect each `Result<StringRecord, Error>` into `Result<Vec<f32>>`
+        .map(|res| match res {
+            Ok(record) => {
+                let record_l = if l < 0 { record.len() - 1 } else { l as usize };
+                record
+                // only retain the last data in each simulation
+                .get(record_l)
+                .map_or(Err(Error::CSVRecordNoPos(record_l, record.clone())), |v| {
+                    v.parse().map_err(Error::Parse)
+                })
+            },
+            Err(e) => Err(Error::CSVRecord(e)),
+        })
+        .chunks(n_species)
+        .into_iter()
+        .map(|chunk| chunk.collect::<Result<Vec<f32>, _>>())
+        .collect::<Result<Vec<_>, _>>()?)
+}
+
+#[pyfunction]
+fn read_all_solve(filename: &str, n_species: usize) -> PyResult<Vec<Vec<Vec<f32>>>> {
+    let mut rdr = csv::ReaderBuilder::new()
+        .has_headers(false)
+        .from_path(filename)
+        .map_err(Error::CSVOpen)?;
+
+    // map and collect entire csv data, `Iterator<Result<StringRecord, Error>>` into `Result<Vec<Vec<f32>>>`
+    Ok(rdr
+        .records()
+        // map and collect each `Result<StringRecord, Error>` into `Result<Vec<f32>>`
+        .map(|res| match res {
+            Ok(record) => record
+                .iter()
+                // convert each `&str` into `f32`
+                .map(|v| v.parse().map_err(Error::Parse))
+                .collect::<Result<Vec<f32>, _>>(),
+            Err(e) => Err(Error::CSVRecord(e)),
+        })
+        .chunks(n_species)
+        .into_iter()
+        .map(|chunk| chunk.collect::<Result<Vec<Vec<f32>>, _>>())
+        .collect::<Result<Vec<_>, _>>()?)
+}
+
 /// A Python module implemented in Rust. The name of this function must match
 /// the `lib.name` setting in the `Cargo.toml`, else Python will not be able to
 /// import the module.
@@ -103,5 +157,7 @@ fn read_solve_at_end(filename: &str, n_species: usize) -> PyResult<Vec<Vec<f32>>
 fn rust_lib_proofreading(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(read_parameters, m)?)?;
     m.add_function(wrap_pyfunction!(read_solve_at_end, m)?)?;
+    m.add_function(wrap_pyfunction!(read_all_solve, m)?)?;
+    m.add_function(wrap_pyfunction!(read_solve_at_l, m)?)?;
     Ok(())
 }

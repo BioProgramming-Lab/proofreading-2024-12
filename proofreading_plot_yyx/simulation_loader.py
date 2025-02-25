@@ -1,14 +1,22 @@
 import numpy as np
 import rust_lib_proofreading
 from RXN_params_yuanqi import RXN_params_yuanqi
+from shared import *
+import zarr
 
 # this decorator look up the subset indices recorded in Simulations.subsets
 # and combine those indices with np.bitwise_and
-# ! have to specificly use subses=[] and beta=[].
+# ! have to specificly use subsets=[] and beta=[].
 
 
 def subset_decorator(func):
-    def wrapper(self, *args, subsets=None, not_subsets=None, **kwargs):
+    def wrapper(
+        self,
+        *args,
+        subsets=None,
+        not_subsets=None,
+        **kwargs
+    ):
         # subset is not pass to inner function, subsets only works for the
         # wrapper
         output = func(self, *args, **kwargs)
@@ -65,31 +73,48 @@ def subset_decorator(func):
 
 
 class Simulations:
-    def __init__(self, path="./", betas=[""], n_species=7, corr_species=5, wrong_species=6):
+    def __init__(
+        self,
+        result_path="./",
+        parameter_path="",
+        betas=None,
+        t=None,
+        l=-1,
+        species=Species
+    ):
         # betas need to be a list
 
         # initial dicts
         self.subsets = {}
         self.parameters = {}
         self.solve = {}
+        self.meta_parameters = {}
 
-        # setup species for correct and wrong
-        self.corr_species = corr_species
-        self.wrong_species = wrong_species
+        self.t = t
+        self.species = species
 
         # load parameters
-        self.parameters[None] = np.array(
-            rust_lib_proofreading.read_parameters(path + "/parameters.csv")
-        )
+        z = zarr.open(parameter_path, "r")
+        self.parameters[None] = z[:]
         self.n_sims = self.parameters[None].shape[0]
+        # self.genrate_koff_gamma0()
         print("Parameters loaded.")
         print(self.get_parameters_shape())
 
-        # load result
-        for b in betas:
-            self.solve[b] = np.array(rust_lib_proofreading.read_solve_at_end(
-                path + "/result_{}.csv".format(b).replace("_.csv", ".csv"), n_species
-            ))
+        # load result.
+        z = zarr.open(result_path, "r")
+        for b in betas if betas is not None else z.keys():
+            print("reading {}".format(b))
+            group_b = z[b]
+            self.meta_parameters[b] = group_b.attrs
+            if self.t is None:
+                self.t = 0
+                t_str = "0"
+                for _t in group_b.keys():
+                    if float(_t) > self.t:
+                        self.t = float(_t)
+                        t_str = _t
+            self.solve[b] = group_b[t_str][:, :, l].swapaxes(0, 1)
 
         self.check_validity()
         print("Simulations result loaded.")
@@ -101,16 +126,26 @@ class Simulations:
     def check_validity(self):
         # should call this as soon as data loaded
         for k in self.solve:
-            self.add_subset(
-                ("valid", k),
-                np.all(
+            subset = np.ones(self.n_sims, dtype=np.bool_)
+            for s in self.species:
+                subset = np.bitwise_and(
+                    subset,
                     np.bitwise_and(
-                        np.isfinite(self.solve[k]),
-                        self.solve[k] > 0
-                    ),
-                    axis=-1
+                        np.isfinite(self.solve[k][:, s.value]),
+                        self.solve[k][:, s.value] > 0
+                    )
                 )
-            )
+
+            self.add_subset(("valid", k), subset)
+
+    # no longer in use
+    def genrate_koff_gamma0(self):
+        self.parameters[None] = np.append(
+            self.get_parameters(),
+            self.get_parameters()[:, [3]] +
+            self.get_parameters()[:, [4]],
+            axis=-1
+        )
 
     def get_parameters_shape(self):
         shapes = {}
@@ -119,11 +154,10 @@ class Simulations:
         return shapes
 
     def get_solve_shape(self):
-        # should manually check data size after data loaded
-        shapes = {}
-        for k in self.solve:
-            shapes[k] = self.solve[k].shape
-        return shapes
+        return {
+            k: v.shape
+            for k, v in self.solve.items()
+        }
 
     @subset_decorator
     def get_parameters(self, subsets=None, not_subsets=None):
@@ -141,13 +175,11 @@ class Simulations:
 
     @subset_decorator
     def get_solve_log(self, beta=0, subsets=None, not_subsets=None):
-        return np.log10(
-            self.get_solve(beta)
-        )
+        return np.log10(self.get_solve(beta))
 
     @subset_decorator
     def get_AC(self, beta=0, subsets=None, not_subsets=None):
-        return self.get_solve(beta)[:, self.corr_species]
+        return self.get_solve(beta)[:, self.species.CAp.value]
 
     @subset_decorator
     def get_AC_log(self, beta=0, subsets=None, not_subsets=None):
@@ -156,14 +188,21 @@ class Simulations:
     @subset_decorator
     def get_fidelity(self, beta=0, subsets=None, not_subsets=None):
         # enhanced fidelity
-        return self.get_AC(beta) / \
-            self.get_solve(beta)[:, self.wrong_species] / \
-            RXN_params_yuanqi().ratio
+        return self.get_AC(beta) / 10 / \
+            self.get_solve(beta)[:, self.species.CBp.value]
 
     @subset_decorator
     def get_fidelity_log(self, beta=0, subsets=None, not_subsets=None):
         # enhanced fidelity
         return np.log10(self.get_fidelity(beta))
+    
+    @subset_decorator
+    def get_r_total(self, beta=0, subsets=None, not_subsets=None):
+        return self.get_solve(beta)[:, [self.species.AR.value, self.species.BR.value, self.species.R.value]].sum(axis=1)
+    
+    @subset_decorator
+    def get_r_total_log(self, beta=0, subsets=None, not_subsets=None):
+        return np.log10(self.get_r_total(beta))
 
     @subset_decorator
     def get_parameters_fidelity_concentration(
