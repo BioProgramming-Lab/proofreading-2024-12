@@ -1,5 +1,4 @@
 from scipy.stats import qmc
-import csv
 import numpy as np
 import zarr
 from shared import *

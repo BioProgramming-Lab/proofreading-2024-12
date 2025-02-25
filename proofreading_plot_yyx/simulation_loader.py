@@ -1,6 +1,4 @@
 import numpy as np
-import rust_lib_proofreading
-from RXN_params_yuanqi import RXN_params_yuanqi
 from shared import *
 import zarr
 
