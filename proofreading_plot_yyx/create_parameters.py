@@ -24,7 +24,7 @@ lhs_samples[:, 1:3] = 10 ** (
 )
 
 log_min = 0
-log_max = 2
+log_max = 5
 lhs_samples[:, 3] = 10 ** (
     log_min + (log_max - log_min) * lhs_samples[:, 3]
 )
