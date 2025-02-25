@@ -34,7 +34,7 @@ z = zarr.open(
 
 
 results = {}
-for i, parameter in enumerate(parameters.reshape((-1, 5))):
+for i, parameter in enumerate(parameters.reshape((-1, num_dimensions))):
     # randomize parameters
     D_0 = parameter[0]
     j_A0 = parameter[1]
@@ -180,7 +180,7 @@ for j, meta_parameter in enumerate(meta_parameters):
 
         for s in Species:
             chunk = []
-            for i, parameter in enumerate(parameters.reshape((-1, 5))):
+            for i, parameter in enumerate(parameters.reshape((-1, num_dimensions))):
                 chunk.append(results[(i, j)][s.value, list(t).index(_t), :])
 
             chunk_s.append(chunk)
