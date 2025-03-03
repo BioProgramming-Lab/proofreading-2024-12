@@ -282,8 +282,8 @@ def RD_rxn(c_tuple, t, rxn_coeffs, production_rate):
     R_rate = j_R - rxn_coeffs.k_AR * c_A * c_R + rxn_coeffs.r_AR * c_AR + rxn_coeffs.gamma1 * c_AR \
                 - rxn_coeffs.k_BR * c_B * c_R + rxn_coeffs.r_BR * c_BR + rxn_coeffs.gamma1 * c_BR
     '''   
-    R_rate = j_R - rxn_coeffs.k_AR * c_A * c_R + \
-        rxn_coeffs.r_AR * c_AR + rxn_coeffs.gamma * c_AR
+    R_rate = j_R - rxn_coeffs.k_AR * c_A * c_R + rxn_coeffs.r_AR * c_AR + rxn_coeffs.gamma * c_AR \
+        - rxn_coeffs.k_BR * c_B * c_R + rxn_coeffs.r_BR * c_BR + rxn_coeffs.gamma * c_BR - rxn_coeffs.deg * c_R
 
     # AA' reaction rate
     ac_rate = rxn_coeffs.k_AC * c_A * c_C - rxn_coeffs.r_AC * c_AC - rxn_coeffs.deg * c_AC 
