@@ -220,8 +220,10 @@ def RD_rxn(c_tuple, t, rxn_coeffs, production_rate):
     c_BR: B-Receptor complex
     """
 
-    def hill_a(a):
-        return (a/rxn_coeffs.k_ac)**rxn_coeffs.n_ac / (1 + (a/rxn_coeffs.k_ac)**rxn_coeffs.n_ac)
+    def hill_a(a, b):
+        numerator = (1 - rxn_coeffs.error_rate) * (a / rxn_coeffs.k_ac)**rxn_coeffs.n_ac + \
+            rxn_coeffs.error_rate * (b / rxn_coeffs.k_ac)**rxn_coeffs.n_ac
+        return numerator / (1 + numerator)
     def hill_r(r):
         return 1 / (1 + (r/rxn_coeffs.k_rp)**rxn_coeffs.n_rp)
     def hill_ar(a, r):
@@ -249,8 +251,8 @@ def RD_rxn(c_tuple, t, rxn_coeffs, production_rate):
     A_rate = j_A - rxn_coeffs.k_AC * c_A * c_C + rxn_coeffs.r_AC * c_AC \
                     - rxn_coeffs.k_AR * c_A * c_R + rxn_coeffs.r_AR * c_AR \
                     - rxn_coeffs.deg * c_A\
-                    + j_self_activation_ar_on_a * hill_a(c_AR) \
-                    + j_self_activation_ac_on_ac * hill_a(c_AC) \
+                    + j_self_activation_ar_on_a * hill_a(c_AR, c_BR) \
+                    + j_self_activation_ac_on_ac * hill_a(c_AC, c_BC) \
                     + j_mutual_inhibition_bc_on_ac * hill_r(c_BC) \
                     + j_ac_rp * hill_ar(c_AC, c_BC)
                 
@@ -258,8 +260,8 @@ def RD_rxn(c_tuple, t, rxn_coeffs, production_rate):
     B_rate = j_B - rxn_coeffs.k_BC * c_B * c_C + rxn_coeffs.r_BC * c_BC \
                     - rxn_coeffs.k_BR * c_B * c_R + rxn_coeffs.r_BR * c_BR \
                     - rxn_coeffs.deg * c_B \
-                    + j_self_activation_br_on_b * hill_a(c_BR) \
-                    + j_self_activation_bc_on_bc * hill_a(c_BC) \
+                    + j_self_activation_br_on_b * hill_a(c_BR, c_AR) \
+                    + j_self_activation_bc_on_bc * hill_a(c_BC, c_AC) \
                     + j_mutual_inhibition_ac_on_bc * hill_r(c_AC) \
                     + j_ac_rp * hill_ar(c_BC, c_AC)
 
@@ -267,10 +269,10 @@ def RD_rxn(c_tuple, t, rxn_coeffs, production_rate):
     C_rate = j_C - rxn_coeffs.k_AC * c_A * c_C + rxn_coeffs.r_AC * c_AC \
                 - rxn_coeffs.k_BC * c_B * c_C + rxn_coeffs.r_BC * c_BC \
                 - rxn_coeffs.deg * c_C\
-                + j_self_activation_ar_on_a * hill_a(c_AR) \
-                + j_self_activation_ac_on_ac * hill_a(c_AC) \
-                + j_self_activation_br_on_b * hill_a(c_BR) \
-                + j_self_activation_bc_on_bc * hill_a(c_BC) \
+                + j_self_activation_ar_on_a * hill_a(c_AR, c_BR) \
+                + j_self_activation_ac_on_ac * hill_a(c_AC, c_BC) \
+                + j_self_activation_br_on_b * hill_a(c_BR, c_AR) \
+                + j_self_activation_bc_on_bc * hill_a(c_BC, c_AC) \
                 + j_mutual_inhibition_bc_on_ac * hill_r(c_BC) \
                 + j_mutual_inhibition_ac_on_bc * hill_r(c_AC) \
                 + j_ac_rp * (hill_ar(c_AC, c_BC) + hill_ar(c_BC, c_AC))

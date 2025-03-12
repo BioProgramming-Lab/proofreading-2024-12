@@ -99,7 +99,8 @@ DEFAULT_META_PARAMETERS = {
     "receiver_region": 251,
     "sender_ratio": 1,
     "n_gridpoints": 451,
-    "receptor_preequilibium": 0
+    "receptor_preequilibium": 0,
+    "error_rate": 0,
 }
 
 
@@ -123,25 +124,16 @@ class MetaParameter(dict):
 # (beta, k, n)
 meta_parameters = [
     # base line (no feedback)
-    MetaParameter(),
+    # MetaParameter(),
 
     # hill function parameters
     MetaParameter(n_ac=1, k_ac=1, b_ac=1),
-    MetaParameter(n_ac=3, k_ac=1, b_ac=1),
-    MetaParameter(n_ac=6, k_ac=1, b_ac=1),
-    MetaParameter(n_ac=1, k_ac=3, b_ac=1),
-    MetaParameter(n_ac=1, k_ac=6, b_ac=1),
-    MetaParameter(n_ac=1, k_ac=1, b_ac=0.5),
-    MetaParameter(n_ac=1, k_ac=1, b_ac=2),
-
-    # increase sender secretion rate
-    MetaParameter(sender_ratio=3),
-
-    # extend sender region to the right
-    MetaParameter(sender_region=451),
-
-    MetaParameter(b_rp=1),
-    MetaParameter(b_ac_rp=1),
+    MetaParameter(n_ac=1, k_ac=1, b_ac=1, error_rate=1e-4),
+    MetaParameter(n_ac=1, k_ac=1, b_ac=1, error_rate=1e-3),
+    MetaParameter(n_ac=1, k_ac=1, b_ac=1, error_rate=1e-2),
+    MetaParameter(n_ac=1, k_ac=1, b_ac=1, error_rate=1e-1),
+    MetaParameter(n_ac=1, k_ac=1, b_ac=1, error_rate=0.5),
+    MetaParameter(n_ac=1, k_ac=1, b_ac=1, error_rate=1),
 ]
 
 
