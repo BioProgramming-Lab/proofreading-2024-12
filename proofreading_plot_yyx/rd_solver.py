@@ -227,8 +227,10 @@ def RD_rxn(c_tuple, t, rxn_coeffs, production_rate):
     def hill_r(r):
         return 1 / (1 + (r/rxn_coeffs.k_rp)**rxn_coeffs.n_rp)
     def hill_ar(a, r):
-        return (a/rxn_coeffs.k_ac)**rxn_coeffs.n_ac / \
-            (
+        return (
+                (1 - rxn_coeffs.sami_error_rate) * (a/rxn_coeffs.k_ac)**rxn_coeffs.n_ac + \
+                rxn_coeffs.sami_error_rate * (r/rxn_coeffs.k_rp)**rxn_coeffs.n_rp
+            ) / (
                 1 + 
                 (a/rxn_coeffs.k_ac)**rxn_coeffs.n_ac + 
                 (r/rxn_coeffs.k_rp)**rxn_coeffs.n_rp

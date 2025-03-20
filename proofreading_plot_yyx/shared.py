@@ -101,6 +101,7 @@ DEFAULT_META_PARAMETERS = {
     "n_gridpoints": 451,
     "receptor_preequilibium": 0,
     "error_rate": 0,
+    "sami_error_rate": 0,
 }
 
 
@@ -126,14 +127,23 @@ meta_parameters = [
     # base line (no feedback)
     # MetaParameter(),
 
-    # hill function parameters
-    MetaParameter(n_ac=1, k_ac=1, b_ac=1),
-    MetaParameter(n_ac=1, k_ac=1, b_ac=1, error_rate=1e-4),
-    MetaParameter(n_ac=1, k_ac=1, b_ac=1, error_rate=1e-3),
-    MetaParameter(n_ac=1, k_ac=1, b_ac=1, error_rate=1e-2),
-    MetaParameter(n_ac=1, k_ac=1, b_ac=1, error_rate=1e-1),
-    MetaParameter(n_ac=1, k_ac=1, b_ac=1, error_rate=0.5),
-    MetaParameter(n_ac=1, k_ac=1, b_ac=1, error_rate=1),
+    # sa error rate
+    # MetaParameter(n_ac=1, k_ac=1, b_ac=1),
+    # MetaParameter(n_ac=1, k_ac=1, b_ac=1, error_rate=1e-4),
+    # MetaParameter(n_ac=1, k_ac=1, b_ac=1, error_rate=1e-3),
+    # MetaParameter(n_ac=1, k_ac=1, b_ac=1, error_rate=1e-2),
+    # MetaParameter(n_ac=1, k_ac=1, b_ac=1, error_rate=1e-1),
+    # MetaParameter(n_ac=1, k_ac=1, b_ac=1, error_rate=0.5),
+    # MetaParameter(n_ac=1, k_ac=1, b_ac=1, error_rate=1),
+
+    # sami error rate
+    MetaParameter(b_ac_rp=1),
+    MetaParameter(b_ac_rp=1, sami_error_rate=1e-4),
+    MetaParameter(b_ac_rp=1, sami_error_rate=1e-3),
+    MetaParameter(b_ac_rp=1, sami_error_rate=1e-2),
+    MetaParameter(b_ac_rp=1, sami_error_rate=1e-1),
+    MetaParameter(b_ac_rp=1, sami_error_rate=0.5),
+    MetaParameter(b_ac_rp=1, sami_error_rate=1),
 ]
 
 

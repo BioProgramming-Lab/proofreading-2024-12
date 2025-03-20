@@ -26,7 +26,7 @@ parameters = z[
 ]
 
 # open result zarr
-store = "result_20250306_error_rate"
+store = "result_20250320_sami_error_rate"
 z = zarr.open(
     store=store,
     mode="a",
@@ -146,6 +146,7 @@ for i, parameter in enumerate(parameters.reshape((-1, num_dimensions))):
             n_rp=meta_parameter["n_rp"],
             k_rp=meta_parameter["k_rp"],
             error_rate=meta_parameter["error_rate"],
+            sami_error_rate=meta_parameter["sami_error_rate"]
         )
 
         res = np.array(RD_solve(

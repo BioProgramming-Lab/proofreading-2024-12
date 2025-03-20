@@ -4,7 +4,7 @@ import numpy as np
 import zarr
 
 # open result zarr
-store = "result_20250306_error_rate"
+store = "result_20250320_sami_error_rate"
 z = zarr.open(
     store=store,
     mode="w",
