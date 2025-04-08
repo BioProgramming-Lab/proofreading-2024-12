@@ -26,7 +26,7 @@ parameters = z[
 ]
 
 # open result zarr
-store = "result_20250320_sami_error_rate"
+store = "result_20250408_error_rate_rescue"
 z = zarr.open(
     store=store,
     mode="a",
