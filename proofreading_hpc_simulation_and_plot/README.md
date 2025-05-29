@@ -1,5 +1,11 @@
 # proofreading_hpc_simulation_and_plot
-this folder is for running simulations on Westlake HPC with multithreading and LHS enabled.
+This folder is for running simulations on Westlake HPC with multithreading and LHS enabled.
+
+## IMPORTANT!!!
+This part of the project uses branches for different plot.
+- **main**: simulation and plot with standard extracellular proofreading circuit.
+- **intracellular**: simulation and plot with intracellular proofreading circuit.
+- **error-rate**: simulation and plot with extracellular proofreadign circuit while taking error in Hill function into account.
 
 ## file list
 - **create_parameters.py**: create parameters used for simulation, output into a folder of csvs, each csv contains a chunk of parameters for multiple runs in single thread , which speed up simulation.
