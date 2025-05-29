@@ -7,6 +7,18 @@ This part of the project uses branches for different plot.
 - **intracellular**: simulation and plot with intracellular proofreading circuit.
 - **error-rate**: simulation and plot with extracellular proofreadign circuit while taking error in Hill function into account.
 
+Here below is the conversion table for the naming of chemical species in code and article.
+| Naming in Code    | Naming in Article |
+| --------          | -------           |
+| A                 | R                 |
+| B                 | W                 |
+| C                 | E                 |
+| R                 | Recptor           |
+| AC                | ER                |
+| BC                | EW                |
+| AR                | not applicable    |
+| BR                | not applicable    |
+
 ## file list
 - **create_parameters.py**: create parameters used for simulation, output into a folder of csvs, each csv contains a chunk of parameters for multiple runs in single thread , which speed up simulation.
 - **run_simulation.py**: actual simulation in here, read a folder of parameters, output into **parameters.csv**, **with_feedback.csv**, **without_feedback.csv**, use filelock to ensure parameters and result is synchronized.
