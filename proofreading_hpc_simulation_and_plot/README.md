@@ -1,5 +1,11 @@
 # proofreading_hpc_simulation_and_plot
-this folder is for running simulations on Westlake HPC with multithreading and LHS enabled.
+This folder is for running simulations on Westlake HPC with multithreading and LHS enabled.
+
+## IMPORTANT!!!
+This part of the project uses branches for different plot.
+- **main**: simulation and plot with standard extracellular proofreading circuit.
+- **intracellular**: simulation and plot with intracellular proofreading circuit.
+- **error-rate**: simulation and plot with extracellular proofreadign circuit while taking error in Hill function into account.
 
 Here below is the conversion table for the naming of chemical species in code and article.
 | Naming in Code    | Naming in Article |
