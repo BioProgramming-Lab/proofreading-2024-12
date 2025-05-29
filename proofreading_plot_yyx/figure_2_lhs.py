@@ -16,7 +16,7 @@ if task_id is None:
     )
 
 # read parameter
-store = "parameters_20250217"
+store = "parameters_20250218_jR"
 z = zarr.open(
     store=store,
     mode="r",
@@ -26,7 +26,7 @@ parameters = z[
 ]
 
 # open result zarr
-store = "result_20250217_5"
+store = "result_20250218"
 z = zarr.open(
     store=store,
     mode="a",
@@ -38,11 +38,9 @@ for i, parameter in enumerate(parameters.reshape((-1, num_dimensions))):
     # randomize parameters
     D_0 = parameter[0]
     j_A0 = parameter[1]
-    r_total = parameter[2]
+    j_R0 = parameter[2]
     koff_AR0 = parameter[3]
     gamma0 = parameter[4]
-
-    j_R0 = r_total * RXN_params_yuanqi().deg
 
     # run with different beta (receiver region j_A0 factor)
     for j, meta_parameter in enumerate(meta_parameters):
