@@ -5,6 +5,7 @@ Original license: LGPL - 3.0Modified by: Yuxuan Yan <yanyuxuan@westlake.edu.cn>
 Date: 2024/12/27
 Modifications:
   - add options to modify the order of nodes
+  - customize plotting format
 
 License:
   - This file is licensed under the LGPL - 3.0 License.
