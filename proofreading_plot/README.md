@@ -24,4 +24,4 @@ Below is the conversion table for the naming of chemical species in code and the
 | BR                | not applicable    |
 | _ac               | self-activation   |
 | _rp               | mutual inhibition |
-| bassline          | withtout proofreading|
+| bassline          | without proofreading|
