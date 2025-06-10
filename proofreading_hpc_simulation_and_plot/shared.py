@@ -55,17 +55,17 @@ class RXN_params_yuanqi(object):
         # RTotal: Total receptor number (nM)
         # self.RTotal = 2.7 # nM  0.0375 – 2.7 nM (corresponding to 18 –1300 molecules/um2 and a 800 um Matrigel layer on the cell surface)
         # k (nM-1*s-1) and r (s-1) of A+A' <-> AA'
-        self.k_AC = 1e-4   # /nM/min
-        self.r_AC = 1e-4  # /min
+        self.k_AC = 1e-4   # nM/s
+        self.r_AC = 1e-4  # /s
         # k (nM-1*s-1) and r (s-1) of B+A' <-> BA'
-        self.k_BC = 1e-4  # nM/smin
-        self.r_BC = 1e-3  # /min
+        self.k_BC = 1e-4  # nM/s
+        self.r_BC = 1e-3  # /s
         # k (nM-1*s-1) and r (s-1) of A+Receptor <-> A-Receptor complex
-        self.k_AR = 4.5e-4  # nM/min
+        self.k_AR = 4.5e-4  # nM/s
         self.r_AR = 1e-3  # /s
         # k (nM-1*s-1) and r (s-1) of B+Receptor <-> B-Receptor complex
-        self.k_BR = 4.5e-4  # nM/min
-        self.r_BR = 1e-3  # /min
+        self.k_BR = 4.5e-4  # nM/s
+        self.r_BR = 1e-3  # /s
         # Recycling rate (s-1) of A-Receptor and B-Receptor
         self.gamma = 4e-4
 
