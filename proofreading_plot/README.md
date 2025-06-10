@@ -1,7 +1,6 @@
 # proofreading_plot
 This folder is for running simulations for figures, excluding those running on HPC
 
-## IMPORTANT!!!
 This part of the project uses branches for different plots.
 - **main**: simulation and plot with standard extracellular proofreading circuit.
 - **detailed-formula-for-figS5**: addition of a detailed formulation of eta (fidelity) in classic kinetic proofreading, in response to Document S2\
