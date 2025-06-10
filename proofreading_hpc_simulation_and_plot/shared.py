@@ -47,9 +47,9 @@ class RXN_params_yuanqi(object):
         """
         self.k_kin = 0.2  # nM/s
         self.k_p = 5  # /s
-        self.k_CAp = 0.1  # /nM/s = 10^5 /M/s
+        self.k_CAp = 0.1  # /nM/s = 10^8 /M/s
         self.r_CAp = 0.1  # /s
-        self.k_CBp = 0.1  # /nM/s = 10^5 /M/s
+        self.k_CBp = 0.1  # /nM/s = 10^8 /M/s
         self.r_CBp = 1  # /s
 
         self.ratio = self.r_CBp / self.r_CAp
