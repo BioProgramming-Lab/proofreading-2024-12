@@ -8,7 +8,7 @@ This part of the project uses branches for different versions of the code.
   
 - **detailed-formula-for-figS5**: addition of a detailed formulation of eta (fidelity) in classic kinetic proofreading, in response to Document S2\
 
-# For figure3b&3e&4d: Retrieving Simulation Results and Analyzing Gradients
+### For figure3b&3e&4d: Retrieving Simulation Results and Analyzing Gradients
 . This code retrieves results from simulations and computes gradients for different parameter combinations.  
 . It enables exploration of gradients for specific results, aiding in understanding their trends and behavior.  
 . The outputs are not the same as the figures in the referenced paper, but the observed trends remain consistent.
